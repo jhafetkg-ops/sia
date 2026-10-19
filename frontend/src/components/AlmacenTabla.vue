@@ -1,0 +1,21 @@
+<template>
+  <section class="alm-tabla-card">
+    <label v-if="mostrarBuscador" class="alm-buscar">Buscar {{ etapa === 'historial' ? 'movimientos' : 'pendientes' }}<input v-model="busqueda" type="search" placeholder="Código, requerimiento, solicitante o proveedor…"></label>
+    <div class="alm-tabla-head"><h2>{{ titulo }}</h2><span>{{ registros.length }} {{ etapa === 'historial' ? 'registros' : 'pendientes' }}</span></div>
+    <p v-if="cargando" class="alm-vacio" role="status">Consultando expedientes…</p>
+    <div v-else class="alm-scroll"><table><thead><tr><th>Código</th><th>Requerimiento</th><th>Solicitante</th><th>{{ etapa === 'comprar' ? 'Fondos disponibles' : 'Cantidad' }}</th><th>Acciones</th></tr></thead><tbody>
+      <tr v-for="e in filtrados" :key="e.id"><td><strong>{{ e.codigo }}</strong></td><td>{{ e.titulo }}<small v-if="e.proveedor">Proveedor: {{ e.proveedor }}</small></td><td>{{ e.solicitante_nombre }}<small>{{ e.area_nombre }}</small></td><td class="alm-cantidad">{{ etapa === 'comprar' ? `Bs. ${Number(e.monto_desembolsado || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}` : `${etapa === 'salida' ? e.cantidad_recibida : etapa === 'entrega' ? e.cantidad_entregada : e.cantidad} unid.` }}</td><td><div class="alm-acciones"><template v-if="['entrada', 'salida'].includes(etapa)"><button class="alm-secundario" @click="$emit('detalle', e)">Ver detalles</button><button @click="$emit('registrar', e)">Registrar</button></template><button v-else @click="$emit(etapa === 'historial' ? 'detalle' : 'registrar', e)">{{ etapa === 'historial' ? 'Ver detalles' : 'Ver' }}</button></div></td></tr>
+      <tr v-if="!filtrados.length"><td colspan="5" class="alm-vacio">{{ busqueda ? 'No se encontraron coincidencias.' : etapa === 'historial' ? 'Todavía no hay movimientos registrados.' : 'No hay expedientes pendientes en esta bandeja.' }}</td></tr>
+    </tbody></table></div>
+  </section>
+</template>
+<script setup>
+import { computed, ref } from 'vue'
+const props = defineProps({ registros: { type: Array, default: () => [] }, etapa: String, titulo: String, cargando: Boolean, mostrarBuscador: { type: Boolean, default: true } })
+defineEmits(['registrar', 'detalle'])
+const busqueda = ref('')
+const filtrados = computed(() => props.registros.filter(e => [e.codigo, e.titulo, e.solicitante_nombre, e.proveedor, e.area_nombre].some(v => String(v || '').toLowerCase().includes(busqueda.value.trim().toLowerCase()))))
+</script>
+<style scoped>
+.alm-tabla-card{padding:24px;background:white;border:1px solid var(--sigta-borde);border-radius:12px;margin:22px 0;color:var(--sigta-texto)}.alm-buscar{display:block;font-size:13px;font-weight:700;margin-bottom:24px}.alm-buscar input{display:block;box-sizing:border-box;width:100%;margin-top:8px;padding:15px;border:1px solid var(--sigta-borde);border-radius:8px;font:inherit;font-weight:400;background:#f8fafd}.alm-buscar input:focus-visible{outline:2px solid var(--sigta-azul);outline-offset:2px}.alm-tabla-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.alm-tabla-head h2{margin:0;color:var(--sigta-azul);font-size:18px}.alm-tabla-head>span{font-size:12px;font-weight:700;background:#fff5d4;color:#765a00;padding:8px 12px;border-radius:18px;white-space:nowrap}.alm-scroll{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th{padding:14px;background:#f3f7fc;font-size:11px;text-transform:uppercase;color:var(--sigta-texto-suave)}td{padding:17px 14px;border-bottom:1px solid #e6edf5;vertical-align:middle}td strong{white-space:nowrap;color:var(--sigta-azul)}td small{display:block;color:var(--sigta-texto-suave);margin-top:5px}td:nth-child(2){overflow-wrap:anywhere;min-width:180px}.alm-cantidad{white-space:nowrap}.alm-acciones{display:flex;gap:8px}button{padding:9px 16px;font:inherit;font-weight:700;background:var(--sigta-azul);color:white;border:1px solid var(--sigta-azul);border-radius:7px;cursor:pointer;white-space:nowrap}.alm-secundario{background:white;color:var(--sigta-azul)}.alm-vacio{text-align:center;color:var(--sigta-texto-suave);padding:30px}@media(max-width:720px){.alm-tabla-card{padding:16px}.alm-tabla-head{align-items:flex-start}.alm-tabla-head h2{font-size:16px}}
+</style>

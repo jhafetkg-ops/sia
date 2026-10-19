@@ -1,0 +1,788 @@
+/* Identidad visual compartida por los paneles institucionales.
+   Replica el lenguaje del Admin y del Portal Solicitante original. */
+.sigta-role-layout {
+  --role-blue: var(--sigta-azul);
+  --role-blue-dark: var(--sigta-azul-oscuro);
+  --role-yellow: var(--sigta-mostaza);
+  --role-bg: var(--sigta-azul-tenue);
+  --role-text: var(--sigta-texto);
+  --role-muted: var(--sigta-texto-suave);
+  --role-border: var(--sigta-azul-texto-claro);
+  min-height: 100vh !important;
+  background: var(--role-bg) !important;
+  color: var(--role-text) !important;
+  font-family: var(--sigta-fuente) !important;
+}
+
+.sigta-role-layout > aside {
+  width: var(--sigta-sidebar) !important;
+  padding: 22px 16px !important;
+  background: var(--role-blue) !important;
+  color: var(--sigta-blanco) !important;
+  box-shadow: none !important;
+}
+
+.sigta-role-layout > aside .brand {
+  min-height: 77px;
+  padding: 0 13px 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .18) !important;
+}
+
+.sigta-role-layout > aside .brand > span,
+.sigta-role-layout > aside .brand > b {
+  width: 53px !important;
+  height: 53px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  background: var(--role-yellow) !important;
+  color: var(--sigta-azul) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  overflow: hidden !important;
+}
+
+.sigta-role-layout > aside .brand > span img,
+.sigta-role-layout > aside .brand > b img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.sigta-role-layout > aside .brand strong,
+.sigta-role-layout > aside .brand b:not(:first-child) {
+  font-size: 25px !important;
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout > aside .brand small {
+  color: var(--sigta-azul-texto-claro) !important;
+  font-size: 10px !important;
+}
+
+.sigta-role-layout > aside .profile,
+.sigta-role-layout > aside .person,
+.sigta-role-layout > aside .user {
+  min-height: 88px;
+  padding: 20px 13px !important;
+}
+
+.sigta-role-layout > aside .avatar,
+.sigta-role-layout > aside .profile > i,
+.sigta-role-layout > aside .person > span,
+.sigta-role-layout > aside .user > i {
+  width: 43px !important;
+  height: 43px !important;
+  border-radius: 50% !important;
+  background: var(--role-yellow) !important;
+  color: var(--sigta-azul) !important;
+  font-size: 11px !important;
+}
+
+.sigta-role-layout > aside > p,
+.sigta-role-layout > aside .nav-label {
+  margin: 14px 13px 8px !important;
+  color: var(--sigta-texto-suave) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.4px !important;
+}
+
+.sigta-role-layout > aside > button,
+.sigta-role-layout > aside .bottom button,
+.sigta-role-layout > aside .logout button,
+.sigta-role-layout > aside .sidebar-foot button {
+  min-height: 49px !important;
+  margin: 2px 4px !important;
+  padding: 12px 14px !important;
+  border-radius: 8px !important;
+  color: var(--sigta-blanco) !important;
+  font-size: 13px !important;
+}
+
+/* "Cerrar sesión" siempre visible: el <aside> ya scrollea
+   internamente (position:sticky + overflow-y:auto más abajo),
+   así que se fija el contenedor de logout al fondo de esa
+   zona visible en vez de dejarlo al final del contenido,
+   donde requeriría scrollear para verlo. */
+.sigta-role-layout > aside .bottom,
+.sigta-role-layout > aside .logout,
+.sigta-role-layout > aside .sidebar-foot {
+  position: sticky !important;
+  bottom: 0 !important;
+  background: var(--role-blue) !important;
+}
+
+.sigta-role-layout > aside > button:hover,
+.sigta-role-layout > aside > button.active {
+  background: rgba(255, 255, 255, .13) !important;
+  box-shadow: inset 3px 0 var(--role-yellow) !important;
+}
+
+.sigta-role-layout > aside button i,
+.sigta-role-layout > aside button span {
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout > aside button em {
+  background: rgba(255, 255, 255, .16) !important;
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout > main {
+  margin-left: 300px !important;
+  padding: 36px 38px 60px !important;
+  background: var(--role-bg) !important;
+}
+
+.sigta-role-layout > main > header {
+  min-height: 108px;
+  margin-bottom: 18px !important;
+}
+
+.sigta-role-layout > main > header h1 {
+  margin: 7px 0 !important;
+  color: var(--role-text) !important;
+  font-size: var(--sigta-titulo) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.4px !important;
+}
+
+.sigta-role-layout > main > header p {
+  color: var(--role-muted) !important;
+  font-size: 14px !important;
+}
+
+.sigta-role-layout > main > header > div > span,
+.sigta-role-layout > main > header > div > small {
+  color: var(--sigta-texto-suave) !important;
+  font-size: 10px !important;
+}
+
+.sigta-role-layout .refresh,
+.sigta-role-layout .reload,
+.sigta-role-layout .icon-btn {
+  background: var(--sigta-blanco) !important;
+  border: 1px solid var(--role-border) !important;
+  color: var(--sigta-azul) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 14px rgba(10, 53, 89, .06) !important;
+}
+
+.sigta-role-layout .hero,
+.sigta-role-layout .welcome {
+  padding: 25px 27px !important;
+  border: 0 !important;
+  border-top: 4px solid var(--role-yellow) !important;
+  border-radius: 12px !important;
+  background: var(--sigta-blanco) !important;
+  color: var(--role-text) !important;
+  box-shadow: 0 7px 18px rgba(12, 53, 86, .07) !important;
+}
+
+.sigta-role-layout .hero small,
+.sigta-role-layout .hero .eyebrow,
+.sigta-role-layout .welcome small {
+  color: var(--sigta-texto-suave) !important;
+}
+
+.sigta-role-layout .hero h2,
+.sigta-role-layout .welcome h2 {
+  color: var(--role-text) !important;
+}
+
+.sigta-role-layout .hero p,
+.sigta-role-layout .welcome p {
+  color: var(--role-muted) !important;
+}
+
+.sigta-role-layout .hero > span,
+.sigta-role-layout .hero-mark,
+.sigta-role-layout .seal {
+  background: var(--role-blue) !important;
+  border: 3px solid var(--role-yellow) !important;
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout .stats {
+  gap: 15px !important;
+  margin: 18px 0 23px !important;
+}
+
+.sigta-role-layout .stats article {
+  min-height: 132px !important;
+  padding: 20px !important;
+  background: var(--sigta-blanco) !important;
+  border: 1px solid var(--role-border) !important;
+  border-top: 3px solid var(--role-yellow) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 6px 16px rgba(12, 53, 86, .055) !important;
+}
+
+.sigta-role-layout .stats article > i,
+.sigta-role-layout .stats article > span {
+  background: var(--role-blue) !important;
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout .stats article b,
+.sigta-role-layout .stats article strong {
+  color: var(--sigta-azul) !important;
+}
+
+.sigta-role-layout .panel,
+.sigta-role-layout .ticket,
+.sigta-role-layout .card,
+.sigta-role-layout .cards article,
+.sigta-role-layout .table,
+.sigta-role-layout .empty {
+  background: var(--sigta-blanco) !important;
+  border: 1px solid var(--role-border) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 5px 14px rgba(12, 53, 86, .045) !important;
+}
+
+.sigta-role-layout .panel {
+  padding: 25px !important;
+}
+
+.sigta-role-layout .panel-head small,
+.sigta-role-layout .panel-title small,
+.sigta-role-layout .eyebrow {
+  color: var(--sigta-texto-suave) !important;
+}
+
+.sigta-role-layout .task,
+.sigta-role-layout .flow,
+.sigta-role-layout .quick > button,
+.sigta-role-layout .flows button {
+  background: var(--sigta-blanco) !important;
+  border-color: var(--sigta-azul-texto-claro) !important;
+}
+
+.sigta-role-layout .task:hover,
+.sigta-role-layout .flow:hover,
+.sigta-role-layout .quick > button:hover,
+.sigta-role-layout .flows button:hover {
+  background: var(--sigta-azul-tenue) !important;
+}
+
+.sigta-role-layout .primary {
+  background: var(--sigta-azul) !important;
+  border-color: var(--sigta-azul) !important;
+  color: var(--sigta-blanco) !important;
+}
+
+.sigta-role-layout .toolbar label,
+.sigta-role-layout .tabs,
+.sigta-role-layout .filters {
+  border-color: var(--role-border) !important;
+}
+
+.sigta-role-layout .instruction,
+.sigta-role-layout .notice,
+.sigta-role-layout .alert {
+  border-left-color: var(--role-yellow) !important;
+  background: var(--sigta-mostaza-suave) !important;
+}
+
+@media (max-width: 720px) {
+  .sigta-role-layout > aside { position: static !important; width: 100% !important; }
+  .sigta-role-layout > main { margin-left: 0 !important; padding: 22px 18px 45px !important; }
+  .sigta-role-layout > main > header h1 { font-size: var(--sigta-titulo) !important; }
+}
+
+/* Paridad estructural con AdminDashboard + AdminMenu */
+.sigta-role-layout {
+  display: flex !important;
+  background: var(--sigta-azul-tenue) !important;
+}
+
+.sigta-role-layout > aside {
+  position: sticky !important;
+  inset: auto !important;
+  top: 0 !important;
+  width: var(--sigta-sidebar) !important;
+  min-width: var(--sigta-sidebar) !important;
+  height: 100vh !important;
+  padding: 20px 14px !important;
+  overflow-y: auto !important;
+  background: var(--sigta-azul) !important;
+}
+
+.sigta-role-layout > aside .brand {
+  min-height: auto !important;
+  gap: 12px !important;
+  padding: 0 8px 20px !important;
+}
+
+.sigta-role-layout > aside .brand > span,
+.sigta-role-layout > aside .brand > b {
+  width: 48px !important;
+  height: 48px !important;
+  font-size: 13px !important;
+}
+
+.sigta-role-layout > aside .brand strong,
+.sigta-role-layout > aside .brand b:not(:first-child) {
+  font-size: 22px !important;
+}
+
+.sigta-role-layout > aside .brand small {
+  font-size: 11px !important;
+}
+
+.sigta-role-layout > aside .profile,
+.sigta-role-layout > aside .person,
+.sigta-role-layout > aside .user {
+  min-height: auto !important;
+  gap: 10px !important;
+  padding: 18px 8px 10px !important;
+}
+
+.sigta-role-layout > aside .avatar,
+.sigta-role-layout > aside .profile > i,
+.sigta-role-layout > aside .person > span,
+.sigta-role-layout > aside .user > i {
+  width: 40px !important;
+  height: 40px !important;
+  font-size: 12px !important;
+}
+
+.sigta-role-layout > aside .profile b,
+.sigta-role-layout > aside .person b,
+.sigta-role-layout > aside .user strong {
+  font-size: 13px !important;
+}
+
+.sigta-role-layout > aside .profile small,
+.sigta-role-layout > aside .person small,
+.sigta-role-layout > aside .user small,
+.sigta-role-layout > aside .profile span {
+  font-size: 10px !important;
+}
+
+.sigta-role-layout > aside > p,
+.sigta-role-layout > aside .nav-label {
+  margin: 17px 10px 6px !important;
+  font-size: 10px !important;
+  letter-spacing: 1px !important;
+}
+
+.sigta-role-layout > aside > button,
+.sigta-role-layout > aside .bottom button,
+.sigta-role-layout > aside .logout button,
+.sigta-role-layout > aside .sidebar-foot button {
+  min-height: 46px !important;
+  margin: 1px 0 !important;
+  padding: 0 11px !important;
+  gap: 11px !important;
+  border-radius: 7px !important;
+  font-size: 14px !important;
+}
+
+.sigta-role-layout > aside button i,
+.sigta-role-layout > aside button span {
+  width: 28px !important;
+  font-size: 16px !important;
+}
+
+.sigta-role-layout > aside button em,
+.sigta-role-layout > aside button > b {
+  font-size: 10px !important;
+}
+
+.sigta-role-layout > main {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  padding: 28px !important;
+  overflow-x: hidden !important;
+  background-image: url('/img/marca-de-agua-body.png') !important;
+  background-repeat: no-repeat !important;
+  /* Con background-attachment: fixed el fondo se posiciona respecto a la
+     ventana, no al <main>, asi que "center" lo dejaba corrido hacia la
+     izquierda por el ancho del menu lateral. Se compensa medio sidebar
+     para que quede centrado en el area de contenido. */
+  background-position: calc(50% + var(--sigta-sidebar) / 2) center !important;
+  background-size: 820px auto !important;
+  background-attachment: fixed !important;
+}
+
+/* =========================================================
+   MARCA DE AGUA EN EL RESTO DE LOS LAYOUTS
+   El bloque de arriba solo cubre .sigta-role-layout. Estas son
+   las demas familias de pantalla del sistema (admin, portal del
+   solicitante, notificaciones, formularios y el panel del
+   Director); todas montan su menu con el mismo --sigta-sidebar,
+   asi que comparten el mismo centrado.
+========================================================= */
+
+.layout > main,
+.admin-layout > main,
+.usuario-layout > main,
+.notification-layout > main,
+.page-layout > main,
+.dashboard-layout > main,
+.portal-layout > main,
+main.page {
+  background-image: url('/img/marca-de-agua-body.png');
+  background-repeat: no-repeat;
+  background-position: calc(50% + var(--sigta-sidebar) / 2) center;
+  background-size: 820px auto;
+  background-attachment: fixed;
+}
+
+.sigta-role-layout > main > header {
+  min-height: auto !important;
+  gap: 20px !important;
+  margin-bottom: 24px !important;
+}
+
+.sigta-role-layout > main > header h1 {
+  margin: 0 !important;
+  font-size: var(--sigta-titulo) !important;
+  color: var(--sigta-texto) !important;
+}
+
+.sigta-role-layout > main > header p {
+  margin: 5px 0 0 !important;
+  font-size: 12px !important;
+  color: var(--sigta-texto-suave) !important;
+}
+
+.sigta-role-layout > main > header > div > span,
+.sigta-role-layout > main > header > div > small {
+  display: block !important;
+  margin-bottom: 7px !important;
+  font-size: 9px !important;
+  color: var(--sigta-texto-suave) !important;
+}
+
+.sigta-role-layout .refresh,
+.sigta-role-layout .reload,
+.sigta-role-layout .icon-btn {
+  padding: 10px 14px !important;
+  font-size: 10px !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,.07) !important;
+}
+
+/* El Admin no utiliza una tarjeta de bienvenida intermedia. */
+.sigta-role-layout .hero,
+.sigta-role-layout .welcome {
+  display: none !important;
+}
+
+.sigta-role-layout .stats {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 14px !important;
+  margin: 0 0 22px !important;
+}
+
+.sigta-role-layout .stats article {
+  min-width: 0 !important;
+  min-height: 120px !important;
+  display: block !important;
+  padding: 18px !important;
+  border: 0 !important;
+  border-top: 4px solid var(--sigta-mostaza) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.05) !important;
+}
+
+.sigta-role-layout .stats article > i,
+.sigta-role-layout .stats article > span.dot,
+.sigta-role-layout .stats article > span:not(.dot) {
+  display: none !important;
+}
+
+.sigta-role-layout .stats article small {
+  display: block !important;
+  margin-bottom: 7px !important;
+  color: var(--sigta-texto-suave) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+}
+
+.sigta-role-layout .stats article b,
+.sigta-role-layout .stats article strong {
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: var(--sigta-azul) !important;
+  font-size: 28px !important;
+}
+
+.sigta-role-layout .stats article p {
+  color: var(--sigta-texto-suave) !important;
+  font-size: 8px !important;
+}
+
+.sigta-role-layout .panels,
+.sigta-role-layout .columns,
+.sigta-role-layout .grid {
+  gap: 14px !important;
+}
+
+.sigta-role-layout .panel {
+  margin-bottom: 20px !important;
+  padding: 22px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.05) !important;
+}
+
+.sigta-role-layout .panel-head small,
+.sigta-role-layout .panel-title small,
+.sigta-role-layout .eyebrow {
+  margin-bottom: 5px !important;
+  color: var(--sigta-azul) !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .8px !important;
+}
+
+.sigta-role-layout .panel h3 {
+  font-size: 18px !important;
+  color: var(--sigta-azul-oscuro) !important;
+}
+
+.sigta-role-layout .task,
+.sigta-role-layout .flow,
+.sigta-role-layout .flows button {
+  min-height: 72px !important;
+  padding: 13px !important;
+  font-size: 10px !important;
+}
+
+.sigta-role-layout .task b,
+.sigta-role-layout .flow b,
+.sigta-role-layout .flows b {
+  font-size: 11px !important;
+}
+
+.sigta-role-layout .task small,
+.sigta-role-layout .flow small,
+.sigta-role-layout .flows p,
+.sigta-role-layout .copy {
+  font-size: 9px !important;
+}
+
+.sigta-role-layout .cards {
+  gap: 14px !important;
+}
+
+.sigta-role-layout .cards article,
+.sigta-role-layout .ticket,
+.sigta-role-layout .card {
+  padding: 18px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   MENÚ DESPLEGABLE (solo móvil)
+
+   Los 9 dashboards de rol comparten esta hoja de estilos, así
+   que el botón y el colapsado se definen UNA sola vez acá en
+   vez de repetirse en cada vista. Cada vista solo necesita:
+   - envolver su <div class="brand">...</div> existente en
+     <div class="brand-row"> y agregar el botón .menu-toggle
+     junto a el,
+   - agregar :class="{ abierto: menuAbierto }" al <aside>,
+   - declarar const menuAbierto = ref(false).
+   El resto de los hijos directos de <aside> (perfil, <p> de
+   sección, botones de navegación, pie) NO se reordenan, así
+   que las reglas ">" existentes de más arriba (aside > p,
+   aside > button, etc.) siguen aplicando sin cambios.
+========================================================= */
+
+.sigta-role-layout > aside .brand-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.sigta-role-layout > aside .menu-toggle {
+  display: none;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 34px !important;
+  height: 34px !important;
+  border: none;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .14) !important;
+  cursor: pointer;
+}
+
+.sigta-role-layout > aside .menu-toggle span {
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sigta-blanco);
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+.sigta-role-layout > aside .menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.sigta-role-layout > aside .menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.sigta-role-layout > aside .menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+@media (max-width: 1050px) {
+  .sigta-role-layout .stats { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (max-width: 720px) {
+  .sigta-role-layout { display: block !important; }
+
+  /* max-height acotado: al abrir el menú, la lista de opciones
+     (incluido "Cerrar sesión") queda en un panel con su propio
+     scroll interno, en vez de empujar toda la página hacia
+     abajo y obligar a scrollear la página entera para llegar
+     al final del menú. */
+  .sigta-role-layout > aside {
+    position: static !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: min(70vh, 520px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .sigta-role-layout > main { padding: 18px !important; }
+  .sigta-role-layout .stats { grid-template-columns: 1fr !important; }
+
+  .sigta-role-layout > aside .menu-toggle { display: flex; }
+
+  .sigta-role-layout > aside:not(.abierto) > *:not(.brand-row) {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   MODAL DE DETALLE (reemplaza los alert() de "ver ticket" /
+   "ver requerimiento" en Soporte Técnico y Mantenimiento).
+   No va scopeado a .sigta-role-layout porque debe cubrir
+   toda la pantalla; los nombres llevan el prefijo
+   "detalle-modal" para no chocar con clases locales de
+   cada vista (.panel, .card, .actions, etc.).
+========================================================= */
+
+.detalle-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 20, 35, .55);
+}
+
+.detalle-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--sigta-blanco);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+
+.detalle-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid var(--sigta-azul-texto-claro);
+  position: sticky;
+  top: 0;
+  background: var(--sigta-blanco);
+}
+
+.detalle-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--sigta-azul-oscuro);
+}
+
+.detalle-modal-header small {
+  display: block;
+  margin-top: 3px;
+  color: var(--sigta-texto-suave);
+  font-size: 11px;
+}
+
+.detalle-modal-close {
+  border: none;
+  background: var(--sigta-azul-tenue);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--sigta-azul);
+  flex-shrink: 0;
+}
+
+.detalle-modal-close:hover {
+  background: var(--sigta-azul-texto-claro);
+}
+
+.detalle-modal-body {
+  padding: 18px 22px 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.detalle-campo b {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--sigta-texto-suave);
+  margin-bottom: 4px;
+}
+
+.detalle-campo p,
+.detalle-campo span {
+  display: block;
+  font-size: 13px;
+  color: var(--sigta-texto);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.detalle-campo a {
+  color: var(--sigta-azul);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.detalle-campo a:hover {
+  text-decoration: underline;
+}
+
+.detalle-vacio {
+  color: var(--sigta-texto-suave);
+  font-style: italic;
+}
+
+.detalle-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 520px) {
+  .detalle-fila {
+    grid-template-columns: 1fr;
+  }
+}

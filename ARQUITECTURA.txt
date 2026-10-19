@@ -1,0 +1,482 @@
+================================================================================
+SIGTA - SISTEMA INTEGRAL DE GESTION DE TICKETS Y APROBACIONES
+Escuela Militar de Ingenieria - Unidad Academica Santa Cruz
+
+DOCUMENTO DE ARQUITECTURA
+Fecha: 05/09/2026
+================================================================================
+
+
+1. QUE ES
+--------------------------------------------------------------------------------
+
+SIGTA es una aplicacion web para gestionar tres procesos administrativos de la
+EMI, cada uno modelado a partir de un diagrama BPMN:
+
+  - Soporte Tecnico       (tickets de UTIC)
+  - Mantenimiento         (requerimientos de Servicios Generales)
+  - Compras Caja Chica    (solicitudes de compra y su desembolso)
+
+Los tres estan conectados: un ticket de soporte o un requerimiento de
+mantenimiento puede derivar en una solicitud de compra cuando hace falta
+reponer un componente.
+
+Los diagramas de origen estan en docs/bpmn/ (formato Camunda):
+  Soporte_Tecnico_SIGTA_Camunda.bpmn
+  Mantenimiento_SIGTA_Camunda.bpmn
+  Compra_Caja_Chica_Camunda_CORREGIDO.bpmn
+
+
+2. ARQUITECTURA GENERAL
+--------------------------------------------------------------------------------
+
+Arquitectura cliente-servidor desacoplada, en dos piezas independientes que se
+comunican por una API REST sobre HTTP con JSON.
+
+    ┌──────────────────────────┐         ┌──────────────────────────┐
+    │  FRONTEND (SPA)          │  JSON   │  BACKEND (API REST)      │
+    │  Vue 3 + Vite            │ ──────► │  Django + DRF            │
+    │  navegador               │ ◄────── │  puerto 8000             │
+    │  puerto 5173             │  HTTP   │                          │
+    └──────────────────────────┘         └───────────┬──────────────┘
+                                                     │
+                                                     ▼
+                                         ┌──────────────────────────┐
+                                         │  SQLite (db.sqlite3)     │
+                                         │  + archivos en media/    │
+                                         └──────────────────────────┘
+
+  - El frontend es una SPA (Single Page Application): el navegador descarga la
+    aplicacion una vez y a partir de ahi solo pide datos, no paginas.
+  - El backend no genera HTML. Solo expone endpoints REST que devuelven JSON.
+  - En desarrollo, Vite hace de proxy: las peticiones a /api y /media se
+    reenvian a http://127.0.0.1:8000 (configurado en frontend/vite.config.js).
+    Por eso no hace falta configurar CORS en local.
+
+Patron del backend: MVT de Django adaptado a API (Model - Serializer - View),
+que es el equivalente de Django REST Framework al MVC clasico.
+
+  models.py      -> definicion de las tablas (ORM)
+  serializers.py -> traduccion entre objetos Python y JSON, mas validaciones
+  views.py       -> logica de negocio y control de permisos
+  urls.py        -> rutas expuestas
+
+
+3. LENGUAJES Y TECNOLOGIAS
+--------------------------------------------------------------------------------
+
+BACKEND
+  Lenguaje            Python 3.14.2
+  Framework           Django 5.2.17
+  API                 Django REST Framework 3.18.0
+  Base de datos       SQLite 3 (archivo backend/db.sqlite3)
+  Hash de contrasenas Argon2id (argon2-cffi 25.1.0)
+  Otros               asgiref 3.11.1, sqlparse 0.5.5, tzdata 2026.1
+
+FRONTEND
+  Lenguaje            JavaScript (ES Modules) + HTML + CSS
+  Framework           Vue 3.5 (Composition API, sintaxis <script setup>)
+  Enrutador           Vue Router 5.2
+  Empaquetador        Vite 8 (con Rolldown)
+  Entorno             Node.js 24.19.0
+  Librerias           SweetAlert2 11.26 (dialogos), jsPDF 4.2 (generar PDF)
+
+OTROS
+  Control de version  Git (repositorio en GitHub)
+  Modelado            BPMN 2.0 (Camunda)
+  Idioma del sistema  Espanol (LANGUAGE_CODE = 'es')
+  Zona horaria        America/La_Paz
+
+NO se usan: TypeScript, Pinia/Vuex, Tailwind, Docker, PostgreSQL ni Celery.
+El CSS es propio, escrito a mano, con variables CSS para el tema institucional.
+
+
+4. ESTRUCTURA DE CARPETAS
+--------------------------------------------------------------------------------
+
+sigtap/
+├── backend/                    Proyecto Django
+│   ├── config/                 Configuracion global
+│   │   ├── settings.py         Ajustes del proyecto
+│   │   ├── urls.py             Rutas raiz (monta las apps bajo /api/)
+│   │   ├── wsgi.py / asgi.py   Puntos de entrada para servidores
+│   ├── usuarios/               App: identidad, roles, permisos
+│   ├── soporte/                App: tickets de soporte tecnico
+│   ├── mantenimiento/          App: requerimientos de mantenimiento
+│   ├── compras/                App: solicitudes de compra Caja Chica
+│   ├── auditoria/              App: bitacora, SMTP, preferencias
+│   ├── recuperacion/           App: recuperacion de contrasena
+│   ├── media/                  Archivos subidos (PDF, evidencias)
+│   ├── manage.py               Utilidad de linea de comandos de Django
+│   └── requirements.txt        Dependencias de Python
+│
+├── frontend/                   Aplicacion Vue
+│   ├── src/
+│   │   ├── views/              35 pantallas completas
+│   │   ├── components/         11 componentes reutilizables (menus, etc.)
+│   │   ├── router/index.js     36 rutas y los guards de acceso
+│   │   ├── data/               Datos de maqueta (pantallas aun sin backend)
+│   │   ├── utils/              Utilidades (dialogos SweetAlert)
+│   │   ├── assets/             CSS del tema (tema-sigta, role-theme)
+│   │   ├── App.vue             Componente raiz
+│   │   └── main.js             Punto de entrada
+│   ├── public/                 Recursos estaticos (favicon, imagenes)
+│   ├── vite.config.js          Configuracion de Vite y del proxy
+│   └── package.json            Dependencias de Node
+│
+├── docs/bpmn/                  Los tres diagramas de proceso
+├── CREDENCIALES_PRUEBA.md      Cuentas de prueba (solo desarrollo local)
+└── credenciales.txt            Lo mismo en texto plano
+
+
+5. APLICACIONES DEL BACKEND Y SUS MODELOS
+--------------------------------------------------------------------------------
+
+El backend se divide en 6 aplicaciones Django, con 18 modelos en total.
+
+usuarios (8 modelos) - Identidad y control de acceso
+  Usuario              Usuario del sistema. Hereda de AbstractUser pero usa el
+                       CORREO como identificador (USERNAME_FIELD = "email"),
+                       no el nombre de usuario. Guarda intentos fallidos,
+                       bloqueo temporal y la bandera de cambio obligatorio.
+  Area                 Unidad organizativa (Sistemas, Mantenimiento, etc.)
+  Rol                  Perfil funcional (ADMIN, JEFE_UTIC, DAF, ...)
+  Permiso              Accion concreta autorizable (VER_COMPRAS, etc.)
+  RolPermiso           Que permisos tiene cada rol (tabla intermedia)
+  UsuarioRol           Que rol tiene cada usuario, y en que area
+  DelegacionAprobacion Cesion temporal de un rol mientras alguien esta ausente
+  InformeJefatura      Informe de actividades de una jefatura a la Direccion
+
+soporte (3 modelos) - Soporte Tecnico
+  CategoriaTicket      Tipo de incidencia
+  EstadoTicket         Estados del flujo (13 registrados)
+  Ticket               El ticket en si, con todo su expediente
+
+mantenimiento (2 modelos) - Mantenimiento
+  EstadoMantenimiento  Estados del flujo (12 registrados)
+  RequerimientoMantenimiento
+
+compras (1 modelo) - Compras Caja Chica
+  SolicitudCompra      Expediente completo: documentos, montos, desembolso,
+                       entrega y descargo. Los 11 estados van como choices
+                       dentro del propio modelo, no en tabla aparte.
+
+auditoria (3 modelos) - Trazabilidad y configuracion
+  Bitacora             Registro de acciones (INFO / WARNING / SECURITY / ERROR)
+  ConfiguracionSMTP    Datos del servidor de correo
+  PreferenciaSistema   Ajustes globales (prefijos, limite de caja chica...)
+
+recuperacion (1 modelo) - Recuperacion de contrasena
+  CodigoRecuperacion   Codigo de 6 digitos, guardado como hash SHA-256, con
+                       vigencia de 10 minutos y maximo 5 intentos.
+
+Migraciones aplicadas: usuarios 7, soporte 15, mantenimiento 6, compras 8,
+auditoria 1, recuperacion 1.
+
+
+6. AUTENTICACION Y AUTORIZACION
+--------------------------------------------------------------------------------
+
+AUTENTICACION (quien eres)
+  Esquema por token de DRF. El cliente envia:
+
+      Authorization: Token <clave>
+
+  El proyecto usa una clase propia, ExpiringTokenAuthentication
+  (usuarios/authentication.py), que anade dos cosas al token estandar:
+    - caducidad de 12 horas desde su creacion
+    - rechazo de usuarios inactivos
+
+  Flujo de ingreso:
+    POST /api/usuarios/login/  con correo y contrasena
+      -> devuelve token, datos del usuario, sus roles y sus permisos
+
+  Contrasenas: Argon2id como algoritmo principal (el que recomienda Django).
+  Se conservan los hashers PBKDF2 solo para poder leer contrasenas antiguas;
+  al iniciar sesion, Django las vuelve a cifrar con Argon2id automaticamente.
+
+  Politica de contrasena (AUTH_PASSWORD_VALIDATORS):
+    minimo 8 caracteres, no comun, no solo numeros, no parecida a los datos
+    del usuario, y un validador propio (usuarios/validators.py) que exige
+    mayuscula, minuscula, numero y caracter especial.
+
+  Proteccion de fuerza bruta: 5 intentos fallidos bloquean la cuenta 15
+  minutos (LOGIN_MAX_INTENTOS_FALLIDOS y LOGIN_MINUTOS_BLOQUEO en settings).
+
+AUTORIZACION (que puedes hacer)
+  Modelo RBAC (control de acceso basado en roles) de tres niveles:
+
+      Usuario --> UsuarioRol --> Rol --> RolPermiso --> Permiso
+
+  Un usuario puede tener varios roles, y cada rol puede estar acotado a un
+  area. Los permisos son cadenas como VER_COMPRAS o DAR_VISTO_BUENO, y se
+  comprueban en el backend antes de ejecutar cada accion.
+
+  La funcion obtener_codigos_rol_efectivos() (usuarios/models.py) es el punto
+  unico que calcula que roles ejerce alguien ahora mismo: los propios mas los
+  delegados temporalmente que sigan vigentes.
+
+  En la base hay 13 roles y 47 permisos:
+    ADMIN, SUPERUSER, DIRECTOR, JEFE_UTIC, ESPECIALISTA, SERVICIOS_GENERALES,
+    AUXILIAR_SERVICIOS_GENERALES, DAF, JEFE_DAF, TESORERIA,
+    ENCARGADO_COMPRAS_ALMACEN, SOLICITANTE, JEFE_CARRERA
+
+  Se cargan con dos comandos de gestion:
+    python manage.py cargar_permisos_sigta     (roles y matriz de permisos)
+    python manage.py cargar_usuarios_prueba    (cuentas de prueba)
+
+MIDDLEWARE PROPIO
+  CambioPasswordObligatorioMiddleware (usuarios/middleware.py): mientras un
+  usuario tenga must_change_password activo, el backend rechaza con 403 toda
+  peticion a /api/ salvo login, mi-contexto y el cambio de contrasena. Repite
+  en el servidor la regla que el frontend aplica al redirigir, de modo que no
+  se pueda saltar llamando a la API directamente.
+
+
+7. LA API REST
+--------------------------------------------------------------------------------
+
+Todo cuelga de /api/. Las rutas se construyen con DefaultRouter de DRF
+(operaciones CRUD) mas acciones personalizadas con @action, una por cada
+transicion del BPMN.
+
+/api/usuarios/
+  login/                          ingreso
+  mi-contexto/                    usuario, roles, areas y permisos actuales
+  mi-perfil/                      datos del propio usuario
+  cambiar-password-obligatorio/   primer ingreso
+  usuarios/  roles/  areas/  permisos/  rol-permisos/  usuario-roles/
+  usuarios/<id>/activar/          reactivar una cuenta
+  usuarios/<id>/restablecer-password/
+  usuarios-por-rol/  buscar-usuario/
+  delegaciones/  delegaciones/<id>/revocar/
+  informes-jefatura/
+
+/api/soporte/
+  tickets/  categorias/  estados/
+  Acciones del flujo sobre tickets/<id>/ :
+    validar-ticket, clasificar-prioridad, designar-revision,
+    iniciar-atencion, registrar-diagnostico, registrar-intervencion,
+    pruebas-tecnicas, verificar-funcionamiento, informar-conformidad,
+    solicitar-requerimiento-componente, evaluar-viabilidad-compra,
+    guardar-borrador-requerimiento, elaborar-informe-final, recibir-informe
+
+/api/mantenimiento/
+  requerimientos/  estados/
+  Acciones sobre requerimientos/<id>/ :
+    validar-ticket, clasificar-prioridad, designar-revision,
+    registrar-diagnostico, realizar-mantenimiento, pruebas-tecnicas,
+    verificar-funcionamiento, informar-conformidad,
+    solicitar-requerimiento, evaluar-viabilidad-compra,
+    registrar-informe, elaborar-informe-final, recibir-informe
+
+/api/compras/
+  solicitudes/
+  Acciones sobre solicitudes/<id>/ :
+    evaluar-daf, certificar-daf, visto-bueno-director, rechazar,
+    desembolsar, confirmar-recepcion-fondos, actualizar-gestion,
+    registrar-compra, registrar-ingreso-almacen,
+    registrar-despacho-almacen, entregar-con-acta, firmar-acta,
+    recibir-solicitud
+
+/api/auditoria/
+  bitacora/  smtp/  preferencias/
+
+/api/recuperacion/
+  solicitar/    genera y envia el codigo de 6 digitos
+  verificar/    valida el codigo
+  restablecer/  fija la nueva contrasena
+
+
+8. LOS TRES FLUJOS Y SUS ESTADOS
+--------------------------------------------------------------------------------
+
+COMPRAS CAJA CHICA (11 estados, en compras/models.py)
+  CREADO_PENDIENTE_DAF              Creado - pendiente DAF
+  EVALUADO_PENDIENTE_CERTIFICACION  Evaluado - pendiente de certificacion
+  VERIFICADO_PENDIENTE_AUTORIZACION Certificado - pendiente de autorizacion
+  APROBADO_PARA_DESEMBOLSO          Aprobado para desembolso
+  FONDOS_DESEMBOLSADOS              Fondos desembolsados
+  COMPRA_REGISTRADA                 Compra realizada - pendiente de entrega
+  COMPRADO_Y_ENTREGADO              Comprado y entregado
+  DESCARGO_PENDIENTE_LIQUIDACION    Acta firmada - pendiente de recepcion
+  CERRADO_ARCHIVADO                 Cerrado y archivado
+  RECHAZADO / ANULADO
+
+  Recorrido de responsables:
+    Solicitante -> DAF (evalua) -> DAF (certifica presupuesto) ->
+    Director (visto bueno) -> Tesoreria (desembolsa) ->
+    Almacen/Compras (compra, ingresa, despacha) -> Solicitante (firma acta)
+
+  Regla de negocio: si el monto estimado es menor o igual a Bs 1500, la via de
+  adquisicion se fija automaticamente como CAJA_CHICA; si es mayor, FINANZAS.
+  Esta en el metodo save() de SolicitudCompra.
+
+  Codigo correlativo: CMP-<anio>-NNNN
+
+SOPORTE TECNICO (13 estados, tabla soporte_estadoticket)
+  BORRADOR, NUEVO, EN_ANALISIS, ASIGNADO, EN_DIAGNOSTICO, EN_EJECUCION,
+  EN_VERIFICACION, PENDIENTE_CONFORMIDAD, PENDIENTE_INFORME_FINAL,
+  CERRADO, CERRADO_SIN_COMPRA, RECHAZADO, ANULADO
+
+  Codigo correlativo: SOP-<anio>-NNNN
+
+MANTENIMIENTO (12 estados, tabla mantenimiento_estadomantenimiento)
+  RECIBIDO, VALIDADO, DERIVADO, REVISION_ALMACEN, EN_ESPERA_COMPRA,
+  EN_MANTENIMIENTO, INFORME_REGISTRADO, CONFORMIDAD_INFORMADA,
+  FINALIZADO, CERRADO_SIN_COMPRA, RECHAZADO, ANULADO
+
+  Codigo correlativo: MTO-<anio>-NNNN
+
+Diferencia de diseno: en Soporte y Mantenimiento los estados son FILAS de una
+tabla (se pueden anadir sin tocar codigo); en Compras son constantes dentro
+del modelo (mas rigido, pero mas seguro para un flujo financiero).
+
+
+9. EL FRONTEND
+--------------------------------------------------------------------------------
+
+35 vistas y 11 componentes. Cada rol tiene su propio panel y su propio menu
+lateral, lo que evita que una pantalla tenga que decidir que mostrar segun
+quien mire.
+
+  Autenticacion       LoginView, CambiarPasswordView, RecuperarPasswordView
+  Director / Admin    AdminDashboardView, AdminComprasView, AdminSoporteView,
+                      AdminMantenimientoView, AdminUsuariosView,
+                      AdminRolesAreasView, AdminBitacoraView, AdminSMTPView,
+                      AdminPreferenciasView, AdminTicketsView,
+                      AdminPortalSolicitanteView, AdminActividadesView
+  Superusuario        SuperuserDashboardView
+  Solicitante         UsuarioDashboardKanbanView, MisSolicitudesView,
+                      SolicitanteSoporteView, SolicitanteMantenimientoView,
+                      SolicitanteComprasView, PerfilView, NotificacionesView
+  UTIC                JefeUticDashboardView, EspecialistaDashboardView
+  Mantenimiento       ServiciosGeneralesDashboardView,
+                      AuxiliarServiciosGeneralesDashboardView
+  Financiero          DafDashboardView, DafEmitirView,
+                      TesoreriaDashboardView, AlmacenDashboardView
+
+  Componentes: AdminMenu, SolicitanteMenu, DafMenu, TesoreriaMenu,
+               AlmacenMenu, SuperuserMenu, IconoSigta, KanbanColumn,
+               DelegacionesPanel
+
+CONTROL DE ACCESO EN EL CLIENTE
+  El router (frontend/src/router/index.js) tiene un guard global que, antes de
+  cada navegacion:
+    1. comprueba que exista token para las rutas con meta.requiereAuth
+    2. fuerza el cambio de contrasena si must_change_password sigue activo
+    3. valida el rol contra meta.admin o meta.roles
+    4. si ya hay sesion y se va a /login, redirige al panel del rol
+
+  IMPORTANTE: esto es solo comodidad de navegacion. La autorizacion real la
+  ejerce el backend en cada peticion; el guard solo evita ver pantallas rotas.
+
+ESTADO DE SESION
+  Se guarda en localStorage del navegador, con dos claves:
+    sigta_token      el token de DRF
+    sigta_usuario    los datos del usuario en JSON
+
+  No hay Pinia ni Vuex: cada vista lee localStorage directamente y llama a la
+  API con fetch().
+
+ESTILOS
+  Dos hojas CSS globales cargadas en main.js:
+    assets/tema-sigta.css   variables del tema institucional (azul, mostaza)
+    assets/role-theme.css   estructura comun (modales, layout de rol)
+  El resto del CSS va dentro de cada componente con <style scoped>.
+
+
+10. AUDITORIA
+--------------------------------------------------------------------------------
+
+Toda accion relevante se registra en la tabla Bitacora mediante la funcion
+registrar_bitacora() de auditoria/utils.py, que guarda usuario, accion,
+modulo, detalle, IP y nivel de gravedad.
+
+Se registran, entre otros: LOGIN_CORRECTO, LOGIN_FALLIDO, BLOQUEO_AUTOMATICO,
+LOGIN_CUENTA_BLOQUEADA, SOLICITUD_RECUPERACION, CAMBIO_CONTRASENA_RECUPERACION,
+CONFIGURAR_SMTP y las transiciones de los tres flujos.
+
+La bitacora se consulta desde la pantalla de Auditoria, disponible para el
+Superusuario.
+
+
+11. TAMANO DEL PROYECTO
+--------------------------------------------------------------------------------
+
+  Backend  (Python)          ~20.300 lineas
+  Frontend (Vue/JS/CSS)      ~54.300 lineas
+  Total                      ~74.600 lineas
+
+  Aplicaciones Django                6
+  Modelos                           18
+  Migraciones                       38
+  Vistas del frontend               35
+  Componentes                       11
+  Rutas del enrutador               36
+  Roles                             13
+  Permisos                          47
+  Pruebas automatizadas   ~1.200 lineas repartidas en 4 apps
+
+
+12. COMO SE EJECUTA EN LOCAL
+--------------------------------------------------------------------------------
+
+Se necesitan DOS terminales, una por cada pieza.
+
+  Terminal 1 - Backend
+    cd backend
+    pip install -r requirements.txt
+    python manage.py migrate
+    python manage.py cargar_permisos_sigta
+    python manage.py cargar_usuarios_prueba
+    python manage.py runserver
+    -> queda escuchando en http://127.0.0.1:8000
+
+  Terminal 2 - Frontend
+    cd frontend
+    npm install
+    npm run dev
+    -> queda escuchando en http://localhost:5173
+
+Se entra por la direccion del FRONTEND (5173). El backend no se abre
+directamente en el navegador: solo responde peticiones de la aplicacion.
+
+Cuentas de prueba: ver CREDENCIALES_PRUEBA.md
+
+
+13. NOTAS SOBRE EL ESTADO ACTUAL
+--------------------------------------------------------------------------------
+
+Puntos a tener presentes, sin que sean fallos de funcionamiento:
+
+  - La base de datos (backend/db.sqlite3) esta versionada en Git. Como es un
+    archivo binario, Git no puede fusionarla: en cada merge una version
+    sustituye entera a la otra. Conviene sacarla del control de versiones y
+    que cada desarrollador genere la suya con migrate mas los dos comandos de
+    carga.
+
+  - La carpeta backend/media/ tambien esta versionada, con los archivos de
+    prueba que sube cada uno.
+
+  - SQLite es adecuado para desarrollo. Para produccion con varios usuarios
+    concurrentes lo habitual seria PostgreSQL; el cambio afecta solo a la
+    seccion DATABASES de settings.py.
+
+  - El envio de correo no esta operativo: settings.py define una variable
+    MAILERS que no es un ajuste de Django (el nombre correcto es
+    EMAIL_BACKEND), y el modelo ConfiguracionSMTP se guarda pero no lo lee
+    nadie para enviar. Por eso la recuperacion de contrasena falla al enviar.
+
+  - La pantalla de Actividades del Director es por ahora una maqueta visual:
+    los datos salen de frontend/src/data/informesActividad.js. El backend ya
+    tiene el modelo InformeJefatura y el endpoint /api/usuarios/informes-
+    jefatura/ listos para conectarla.
+
+  - Falta DEFAULT_AUTO_FIELD en settings.py; de ahi los 18 avisos models.W042
+    que muestra Django al arrancar. Son advertencias, no errores.
+
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

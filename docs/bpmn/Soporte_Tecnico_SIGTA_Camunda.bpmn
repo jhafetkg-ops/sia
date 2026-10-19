@@ -1,0 +1,421 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_SoporteTecnico" targetNamespace="http://sigta.emi.bo/bpmn/soporte-tecnico" exporter="OpenAI" exporterVersion="1.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7">
+  <bpmn:process id="Process_SoporteTecnico" name="DIAGRAMA 1 - SOPORTE TÉCNICO" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Soporte">
+      <bpmn:lane id="Lane_Usuario" name="USUARIO SOLICITANTE">
+        <bpmn:flowNodeRef>Start_Ticket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarTicket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarFuncionamiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ProblemaResuelto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformarConformidad</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_JefeUTIC" name="JEFE DE UTIC">
+        <bpmn:flowNodeRef>Task_RecibirValidar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TicketValido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ClasificarSLA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_TicketNoProcede</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DesignarRevision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirRequerimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ViableCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ComunicarNoViabilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_CerradoSinCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ElevarInforme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformeFinal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ParaleloSplit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ParaleloJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Especialistas" name="ESPECIALISTAS">
+        <bpmn:flowNodeRef>Task_RecibirOrden</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InspeccionDiagnostico</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RequiereCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RealizarRequerimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MergeReparacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RepararInstalar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PruebasTecnicas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarInformeUTIC</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Direccion" name="DIRECTOR/JEFE DE SECCIÓN">
+        <bpmn:flowNodeRef>Task_AutorizarCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirInformeDirector</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirInformeJefeCarrera</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Finanzas" name="ASUNTOS FINANCIEROS">
+        <bpmn:flowNodeRef>SubProcess_GestionCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarInventario</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Ticket" name="Ticket requerido" />
+    <bpmn:manualTask id="Task_RegistrarTicket" name="Registrar ticket" />
+    <bpmn:userTask id="Task_RecibirValidar" name="Recibir Ticket y validar Ticket" />
+    <bpmn:exclusiveGateway id="Gateway_TicketValido" name="Ticket válido?" />
+    <bpmn:userTask id="Task_ClasificarSLA" name="Clasificar prioridad y asignar SLA" />
+    <bpmn:userTask id="Task_NotificarRechazo" name="Notificar rechazo al usuario solicitante" />
+    <bpmn:endEvent id="End_TicketNoProcede" name="Ticket no procede" />
+    <bpmn:userTask id="Task_DesignarRevision" name="Designar revisión al equipo de especialistas" />
+    <bpmn:userTask id="Task_RecibirOrden" name="Recibir orden de trabajo" />
+    <bpmn:userTask id="Task_InspeccionDiagnostico" name="Realizar inspección técnica y diagnóstico" />
+    <bpmn:exclusiveGateway id="Gateway_RequiereCompra" name="Requiere compra?" />
+    <bpmn:userTask id="Task_RealizarRequerimiento" name="Realizar requerimiento" />
+    <bpmn:userTask id="Task_RecibirRequerimiento" name="Recibir requerimiento y cotización" />
+    <bpmn:exclusiveGateway id="Gateway_ViableCompra" name="Es viable la compra?" />
+    <bpmn:userTask id="Task_ComunicarNoViabilidad" name="Comunicar no viabilidad" />
+    <bpmn:endEvent id="End_CerradoSinCompra" name="Cerrado sin compra" />
+    <bpmn:userTask id="Task_ElevarInforme" name="Elevar el informe" />
+    <bpmn:userTask id="Task_AutorizarCompra" name="Autorizar y continuar flujo de solicitud de compra" />
+    <bpmn:subProcess id="SubProcess_GestionCompra" name="Gestión de compra de Activos Fijos" />
+    <bpmn:businessRuleTask id="Task_ActualizarInventario" name="Actualizar inventario y garantía" />
+    <bpmn:exclusiveGateway id="Gateway_MergeReparacion" />
+    <bpmn:serviceTask id="Task_RepararInstalar" name="Realizar la reparación/instalación del equipo y registrar" />
+    <bpmn:serviceTask id="Task_PruebasTecnicas" name="Realizar pruebas técnicas" />
+    <bpmn:userTask id="Task_RegistrarInformeUTIC" name="Registrar informe al jefe UTIC" />
+    <bpmn:userTask id="Task_VerificarFuncionamiento" name="Verificar funcionamiento" />
+    <bpmn:exclusiveGateway id="Gateway_ProblemaResuelto" name="Problema Resuelto?" />
+    <bpmn:userTask id="Task_InformarConformidad" name="Informar conformidad" />
+    <bpmn:userTask id="Task_InformeFinal" name="Elaborar y validar informe final" />
+    <bpmn:parallelGateway id="Gateway_ParaleloSplit" />
+    <bpmn:userTask id="Task_RecibirInformeDirector" name="Recibir informe de actividades (Director)" />
+    <bpmn:userTask id="Task_RecibirInformeJefeCarrera" name="Recibir informe de actividades (Jefe de carrera)" />
+    <bpmn:parallelGateway id="Gateway_ParaleloJoin" />
+    <bpmn:endEvent id="End_Fin" name="Fin" />
+    <bpmn:textAnnotation id="Annotation_TicketDatos">
+      <bpmn:text>(descripción, ubicación, equipo, evidencias)</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Annotation_Componente">
+      <bpmn:text>características del componente y cotización</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_TicketDatos" sourceRef="Task_RegistrarTicket" targetRef="Annotation_TicketDatos" />
+    <bpmn:association id="Association_Componente" sourceRef="Task_RealizarRequerimiento" targetRef="Annotation_Componente" />
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="Start_Ticket" targetRef="Task_RegistrarTicket" />
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_RegistrarTicket" targetRef="Task_RecibirValidar" />
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_RecibirValidar" targetRef="Gateway_TicketValido" />
+    <bpmn:sequenceFlow id="Flow_04_Si" sourceRef="Gateway_TicketValido" targetRef="Task_ClasificarSLA" name="sí" />
+    <bpmn:sequenceFlow id="Flow_05_No" sourceRef="Gateway_TicketValido" targetRef="Task_NotificarRechazo" name="no" />
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_NotificarRechazo" targetRef="End_TicketNoProcede" />
+    <bpmn:sequenceFlow id="Flow_07" sourceRef="Task_ClasificarSLA" targetRef="Task_DesignarRevision" />
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Task_DesignarRevision" targetRef="Task_RecibirOrden" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_RecibirOrden" targetRef="Task_InspeccionDiagnostico" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_InspeccionDiagnostico" targetRef="Gateway_RequiereCompra" />
+    <bpmn:sequenceFlow id="Flow_11_No" sourceRef="Gateway_RequiereCompra" targetRef="Gateway_MergeReparacion" name="no" />
+    <bpmn:sequenceFlow id="Flow_12_Si" sourceRef="Gateway_RequiereCompra" targetRef="Task_RealizarRequerimiento" name="sí" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_RealizarRequerimiento" targetRef="Task_RecibirRequerimiento" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_RecibirRequerimiento" targetRef="Gateway_ViableCompra" />
+    <bpmn:sequenceFlow id="Flow_15_No" sourceRef="Gateway_ViableCompra" targetRef="Task_ComunicarNoViabilidad" name="no" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_ComunicarNoViabilidad" targetRef="End_CerradoSinCompra" />
+    <bpmn:sequenceFlow id="Flow_17_Si" sourceRef="Gateway_ViableCompra" targetRef="Task_ElevarInforme" name="sí" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_ElevarInforme" targetRef="Task_AutorizarCompra" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_AutorizarCompra" targetRef="SubProcess_GestionCompra" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="SubProcess_GestionCompra" targetRef="Task_ActualizarInventario" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_ActualizarInventario" targetRef="Gateway_MergeReparacion" />
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="Gateway_MergeReparacion" targetRef="Task_RepararInstalar" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_RepararInstalar" targetRef="Task_PruebasTecnicas" />
+    <bpmn:sequenceFlow id="Flow_24" sourceRef="Task_PruebasTecnicas" targetRef="Task_RegistrarInformeUTIC" />
+    <bpmn:sequenceFlow id="Flow_25" sourceRef="Task_RegistrarInformeUTIC" targetRef="Task_VerificarFuncionamiento" />
+    <bpmn:sequenceFlow id="Flow_26" sourceRef="Task_VerificarFuncionamiento" targetRef="Gateway_ProblemaResuelto" />
+    <bpmn:sequenceFlow id="Flow_27_Si" sourceRef="Gateway_ProblemaResuelto" targetRef="Task_InformarConformidad" name="sí" />
+    <bpmn:sequenceFlow id="Flow_28_No" sourceRef="Gateway_ProblemaResuelto" targetRef="Task_DesignarRevision" name="no" />
+    <bpmn:sequenceFlow id="Flow_29" sourceRef="Task_InformarConformidad" targetRef="Task_InformeFinal" />
+    <bpmn:sequenceFlow id="Flow_30" sourceRef="Task_InformeFinal" targetRef="Gateway_ParaleloSplit" />
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Gateway_ParaleloSplit" targetRef="Task_RecibirInformeDirector" />
+    <bpmn:sequenceFlow id="Flow_32" sourceRef="Gateway_ParaleloSplit" targetRef="Task_RecibirInformeJefeCarrera" />
+    <bpmn:sequenceFlow id="Flow_33" sourceRef="Task_RecibirInformeDirector" targetRef="Gateway_ParaleloJoin" />
+    <bpmn:sequenceFlow id="Flow_34" sourceRef="Task_RecibirInformeJefeCarrera" targetRef="Gateway_ParaleloJoin" />
+    <bpmn:sequenceFlow id="Flow_35" sourceRef="Gateway_ParaleloJoin" targetRef="End_Fin" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_Soporte">
+    <bpmn:participant id="Participant_Soporte" name="SOPORTE TÉCNICO" processRef="Process_SoporteTecnico" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Soporte">
+    <bpmndi:BPMNPlane id="BPMNPlane_Soporte" bpmnElement="Collaboration_Soporte">
+      <bpmndi:BPMNShape id="Shape_Participant" bpmnElement="Participant_Soporte" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="4380" height="1000" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Usuario" bpmnElement="Lane_Usuario" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="4350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_JefeUTIC" bpmnElement="Lane_JefeUTIC" isHorizontal="true">
+        <dc:Bounds x="70" y="240" width="4350" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Especialistas" bpmnElement="Lane_Especialistas" isHorizontal="true">
+        <dc:Bounds x="70" y="460" width="4350" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Direccion" bpmnElement="Lane_Direccion" isHorizontal="true">
+        <dc:Bounds x="70" y="680" width="4350" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Finanzas" bpmnElement="Lane_Finanzas" isHorizontal="true">
+        <dc:Bounds x="70" y="860" width="4350" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start_Ticket" bpmnElement="Start_Ticket">
+        <dc:Bounds x="140" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RegistrarTicket" bpmnElement="Task_RegistrarTicket">
+        <dc:Bounds x="220" y="85" width="150" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Annotation_TicketDatos" bpmnElement="Annotation_TicketDatos">
+        <dc:Bounds x="400" y="78" width="180" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirValidar" bpmnElement="Task_RecibirValidar">
+        <dc:Bounds x="240" y="300" width="160" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_TicketValido" bpmnElement="Gateway_TicketValido">
+        <dc:Bounds x="445" y="320" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ClasificarSLA" bpmnElement="Task_ClasificarSLA">
+        <dc:Bounds x="555" y="285" width="175" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NotificarRechazo" bpmnElement="Task_NotificarRechazo">
+        <dc:Bounds x="555" y="390" width="175" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_TicketNoProcede" bpmnElement="End_TicketNoProcede">
+        <dc:Bounds x="790" y="402" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DesignarRevision" bpmnElement="Task_DesignarRevision">
+        <dc:Bounds x="800" y="285" width="170" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirOrden" bpmnElement="Task_RecibirOrden">
+        <dc:Bounds x="810" y="520" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InspeccionDiagnostico" bpmnElement="Task_InspeccionDiagnostico">
+        <dc:Bounds x="1020" y="520" width="185" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_RequiereCompra" bpmnElement="Gateway_RequiereCompra">
+        <dc:Bounds x="1245" y="535" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RealizarRequerimiento" bpmnElement="Task_RealizarRequerimiento">
+        <dc:Bounds x="1375" y="590" width="180" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Annotation_Componente" bpmnElement="Annotation_Componente">
+        <dc:Bounds x="1600" y="585" width="210" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirRequerimiento" bpmnElement="Task_RecibirRequerimiento">
+        <dc:Bounds x="1370" y="285" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ViableCompra" bpmnElement="Gateway_ViableCompra">
+        <dc:Bounds x="1590" y="305" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ComunicarNoViabilidad" bpmnElement="Task_ComunicarNoViabilidad">
+        <dc:Bounds x="1570" y="390" width="180" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_CerradoSinCompra" bpmnElement="End_CerradoSinCompra">
+        <dc:Bounds x="1795" y="402" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ElevarInforme" bpmnElement="Task_ElevarInforme">
+        <dc:Bounds x="1845" y="285" width="155" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AutorizarCompra" bpmnElement="Task_AutorizarCompra">
+        <dc:Bounds x="1840" y="720" width="185" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubProcess_GestionCompra" bpmnElement="SubProcess_GestionCompra" isExpanded="false">
+        <dc:Bounds x="2050" y="905" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ActualizarInventario" bpmnElement="Task_ActualizarInventario">
+        <dc:Bounds x="2310" y="905" width="185" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_MergeReparacion" bpmnElement="Gateway_MergeReparacion">
+        <dc:Bounds x="2570" y="535" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RepararInstalar" bpmnElement="Task_RepararInstalar">
+        <dc:Bounds x="2680" y="510" width="225" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PruebasTecnicas" bpmnElement="Task_PruebasTecnicas">
+        <dc:Bounds x="2960" y="510" width="185" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RegistrarInformeUTIC" bpmnElement="Task_RegistrarInformeUTIC">
+        <dc:Bounds x="3190" y="520" width="155" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerificarFuncionamiento" bpmnElement="Task_VerificarFuncionamiento">
+        <dc:Bounds x="3180" y="85" width="175" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ProblemaResuelto" bpmnElement="Gateway_ProblemaResuelto">
+        <dc:Bounds x="3400" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformarConformidad" bpmnElement="Task_InformarConformidad">
+        <dc:Bounds x="3510" y="85" width="155" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformeFinal" bpmnElement="Task_InformeFinal">
+        <dc:Bounds x="3510" y="300" width="185" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ParaleloSplit" bpmnElement="Gateway_ParaleloSplit">
+        <dc:Bounds x="3740" y="320" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirInformeDirector" bpmnElement="Task_RecibirInformeDirector">
+        <dc:Bounds x="3880" y="710" width="180" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirInformeJefeCarrera" bpmnElement="Task_RecibirInformeJefeCarrera">
+        <dc:Bounds x="3880" y="795" width="180" height="65" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ParaleloJoin" bpmnElement="Gateway_ParaleloJoin">
+        <dc:Bounds x="4140" y="320" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_Fin" bpmnElement="End_Fin">
+        <dc:Bounds x="4260" y="327" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_01" bpmnElement="Flow_01">
+        <di:waypoint x="176" y="130" />
+        <di:waypoint x="220" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_02" bpmnElement="Flow_02">
+        <di:waypoint x="295" y="175" />
+        <di:waypoint x="295" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_03" bpmnElement="Flow_03">
+        <di:waypoint x="400" y="345" />
+        <di:waypoint x="445" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_04_Si" bpmnElement="Flow_04_Si">
+        <di:waypoint x="495" y="345" />
+        <di:waypoint x="555" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_05_No" bpmnElement="Flow_05_No">
+        <di:waypoint x="470" y="370" />
+        <di:waypoint x="470" y="420" />
+        <di:waypoint x="555" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_06" bpmnElement="Flow_06">
+        <di:waypoint x="730" y="420" />
+        <di:waypoint x="790" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_07" bpmnElement="Flow_07">
+        <di:waypoint x="730" y="330" />
+        <di:waypoint x="800" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_08" bpmnElement="Flow_08">
+        <di:waypoint x="885" y="375" />
+        <di:waypoint x="885" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_09" bpmnElement="Flow_09">
+        <di:waypoint x="960" y="560" />
+        <di:waypoint x="1020" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10" bpmnElement="Flow_10">
+        <di:waypoint x="1205" y="560" />
+        <di:waypoint x="1245" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_11_No" bpmnElement="Flow_11_No">
+        <di:waypoint x="1270" y="535" />
+        <di:waypoint x="1270" y="485" />
+        <di:waypoint x="2595" y="485" />
+        <di:waypoint x="2595" y="535" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_12_Si" bpmnElement="Flow_12_Si">
+        <di:waypoint x="1270" y="560" />
+        <di:waypoint x="1320" y="560" />
+        <di:waypoint x="1320" y="627" />
+        <di:waypoint x="1375" y="627" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_13" bpmnElement="Flow_13">
+        <di:waypoint x="1465" y="590" />
+        <di:waypoint x="1465" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_14" bpmnElement="Flow_14">
+        <di:waypoint x="1550" y="330" />
+        <di:waypoint x="1590" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_15_No" bpmnElement="Flow_15_No">
+        <di:waypoint x="1615" y="355" />
+        <di:waypoint x="1615" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="1750" y="420" />
+        <di:waypoint x="1795" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_17_Si" bpmnElement="Flow_17_Si">
+        <di:waypoint x="1640" y="330" />
+        <di:waypoint x="1845" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_18" bpmnElement="Flow_18">
+        <di:waypoint x="1922" y="375" />
+        <di:waypoint x="1922" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_19" bpmnElement="Flow_19">
+        <di:waypoint x="1932" y="810" />
+        <di:waypoint x="1932" y="950" />
+        <di:waypoint x="2050" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_20" bpmnElement="Flow_20">
+        <di:waypoint x="2250" y="950" />
+        <di:waypoint x="2310" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_21" bpmnElement="Flow_21">
+        <di:waypoint x="2495" y="950" />
+        <di:waypoint x="2595" y="950" />
+        <di:waypoint x="2595" y="585" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_22" bpmnElement="Flow_22">
+        <di:waypoint x="2620" y="560" />
+        <di:waypoint x="2680" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_23" bpmnElement="Flow_23">
+        <di:waypoint x="2905" y="555" />
+        <di:waypoint x="2960" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_24" bpmnElement="Flow_24">
+        <di:waypoint x="3145" y="555" />
+        <di:waypoint x="3190" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_25" bpmnElement="Flow_25">
+        <di:waypoint x="3267" y="520" />
+        <di:waypoint x="3267" y="175" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_26" bpmnElement="Flow_26">
+        <di:waypoint x="3355" y="130" />
+        <di:waypoint x="3400" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_27_Si" bpmnElement="Flow_27_Si">
+        <di:waypoint x="3450" y="130" />
+        <di:waypoint x="3510" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_28_No" bpmnElement="Flow_28_No">
+        <di:waypoint x="3425" y="105" />
+        <di:waypoint x="3425" y="60" />
+        <di:waypoint x="885" y="60" />
+        <di:waypoint x="885" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_29" bpmnElement="Flow_29">
+        <di:waypoint x="3587" y="175" />
+        <di:waypoint x="3587" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_30" bpmnElement="Flow_30">
+        <di:waypoint x="3695" y="345" />
+        <di:waypoint x="3740" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_31" bpmnElement="Flow_31">
+        <di:waypoint x="3765" y="370" />
+        <di:waypoint x="3765" y="747" />
+        <di:waypoint x="3880" y="747" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_32" bpmnElement="Flow_32">
+        <di:waypoint x="3765" y="370" />
+        <di:waypoint x="3765" y="827" />
+        <di:waypoint x="3880" y="827" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_33" bpmnElement="Flow_33">
+        <di:waypoint x="4060" y="747" />
+        <di:waypoint x="4165" y="747" />
+        <di:waypoint x="4165" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_34" bpmnElement="Flow_34">
+        <di:waypoint x="4060" y="827" />
+        <di:waypoint x="4165" y="827" />
+        <di:waypoint x="4165" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_35" bpmnElement="Flow_35">
+        <di:waypoint x="4190" y="345" />
+        <di:waypoint x="4260" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Association_TicketDatos" bpmnElement="Association_TicketDatos">
+        <di:waypoint x="370" y="130" />
+        <di:waypoint x="390" y="130" />
+        <di:waypoint x="390" y="113" />
+        <di:waypoint x="400" y="113" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Association_Componente" bpmnElement="Association_Componente">
+        <di:waypoint x="1555" y="627" />
+        <di:waypoint x="1575" y="627" />
+        <di:waypoint x="1575" y="620" />
+        <di:waypoint x="1600" y="620" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

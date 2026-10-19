@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_Mantenimiento" targetNamespace="http://sigta.emi.bo/bpmn/mantenimiento" exporter="Camunda Modeler" exporterVersion="5.x" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7">
+  <bpmn:process id="Process_Mantenimiento" name="MANTENIMIENTO" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Mantenimiento">
+      <bpmn:lane id="Lane_UnidadSolicitante" name="UNIDAD SOLICITANTE">
+        <bpmn:flowNodeRef>Start_Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LlamaEnviaInforme</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ServiciosGenerales" name="SERVICIOS GENERALES">
+        <bpmn:flowNodeRef>Task_DerivaAuxiliar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibeExpedientes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FinMes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SubProcess_CompraCajaChica</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Auxiliar" name="AUXILIAR DE SERVICIOS GENERALES">
+        <bpmn:flowNodeRef>Gateway_RequiereReposicion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RealizaMantenimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformeFotograma</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformaNoExistencia</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Almacen" name="ENCARGADO DE COMPRAS Y ALMACÉN">
+        <bpmn:flowNodeRef>Gateway_HayProducto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregaProducto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReportaNoExistencia</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Director" name="DIRECTOR">
+        <bpmn:flowNodeRef>Task_RecibeReportes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Inicio" name="INICIO"/>
+    <bpmn:task id="Task_LlamaEnviaInforme" name="LLAMA O ENVÍA INFORME AL DE SERVICIOS GENERALES"/>
+    <bpmn:task id="Task_DerivaAuxiliar" name="DERIVA A SU AUXILIAR"/>
+    <bpmn:exclusiveGateway id="Gateway_RequiereReposicion" name="¿REQUIERE REPOSICIÓN DE ALMACÉN?"/>
+    <bpmn:task id="Task_RealizaMantenimiento" name="REALIZA EL MANTENIMIENTO"/>
+    <bpmn:task id="Task_InformeFotograma" name="REALIZA UN INFORME, FOTOGRAMA DEL TRABAJO REALIZADO"/>
+    <bpmn:task id="Task_RecibeExpedientes" name="RECIBE TODOS LOS EXPEDIENTES Y LOS ARCHIVA"/>
+    <bpmn:task id="Task_FinMes" name="A FIN DE MES SE DA A CONOCER TODOS LOS MANTENIMIENTOS"/>
+    <bpmn:exclusiveGateway id="Gateway_HayProducto" name="¿HAY PRODUCTO EN EL ALMACÉN?"/>
+    <bpmn:task id="Task_EntregaProducto" name="ENTREGA EL PRODUCTO AL AUXILIAR DE SERVICIOS GENERALES"/>
+    <bpmn:task id="Task_ReportaNoExistencia" name="REPORTA DE NO EXISTENCIA DEL PRODUCTO"/>
+    <bpmn:task id="Task_InformaNoExistencia" name="INFORMA DE NO EXISTENCIA DEL PRODUCTO"/>
+    <bpmn:subProcess id="SubProcess_CompraCajaChica" name="SUB PROCESO COMPRA CAJA CHICA"/>
+    <bpmn:task id="Task_RecibeReportes" name="RECIBE LOS REPORTES"/>
+    <bpmn:endEvent id="End_Fin" name="FIN"/>
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="Start_Inicio" targetRef="Task_LlamaEnviaInforme"/>
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_LlamaEnviaInforme" targetRef="Task_DerivaAuxiliar"/>
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_DerivaAuxiliar" targetRef="Gateway_RequiereReposicion"/>
+    <bpmn:sequenceFlow id="Flow_04_No" sourceRef="Gateway_RequiereReposicion" targetRef="Task_RealizaMantenimiento" name="NO"/>
+    <bpmn:sequenceFlow id="Flow_05_Si" sourceRef="Gateway_RequiereReposicion" targetRef="Gateway_HayProducto" name="SÍ"/>
+    <bpmn:sequenceFlow id="Flow_06_Si" sourceRef="Gateway_HayProducto" targetRef="Task_EntregaProducto" name="SÍ"/>
+    <bpmn:sequenceFlow id="Flow_07_Entrega" sourceRef="Task_EntregaProducto" targetRef="Task_RealizaMantenimiento"/>
+    <bpmn:sequenceFlow id="Flow_08_No" sourceRef="Gateway_HayProducto" targetRef="Task_ReportaNoExistencia" name="NO"/>
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_ReportaNoExistencia" targetRef="Task_InformaNoExistencia"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_InformaNoExistencia" targetRef="SubProcess_CompraCajaChica"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="SubProcess_CompraCajaChica" targetRef="Task_RealizaMantenimiento"/>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_RealizaMantenimiento" targetRef="Task_InformeFotograma"/>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_InformeFotograma" targetRef="Task_RecibeExpedientes"/>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_RecibeExpedientes" targetRef="Task_FinMes"/>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_FinMes" targetRef="Task_RecibeReportes"/>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_RecibeReportes" targetRef="End_Fin"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_Mantenimiento">
+    <bpmn:participant id="Participant_Mantenimiento" name="MANTENIMIENTO" processRef="Process_Mantenimiento"/>
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Mantenimiento">
+    <bpmndi:BPMNPlane id="BPMNPlane_Mantenimiento" bpmnElement="Collaboration_Mantenimiento">
+      <bpmndi:BPMNShape id="Shape_Participant" bpmnElement="Participant_Mantenimiento" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1550" height="1060"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Unidad" bpmnElement="Lane_UnidadSolicitante" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1520" height="190"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_SG" bpmnElement="Lane_ServiciosGenerales" isHorizontal="true">
+        <dc:Bounds x="70" y="230" width="1520" height="200"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Aux" bpmnElement="Lane_Auxiliar" isHorizontal="true">
+        <dc:Bounds x="70" y="430" width="1520" height="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Almacen" bpmnElement="Lane_Almacen" isHorizontal="true">
+        <dc:Bounds x="70" y="640" width="1520" height="240"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Director" bpmnElement="Lane_Director" isHorizontal="true">
+        <dc:Bounds x="70" y="880" width="1520" height="220"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start_Inicio" bpmnElement="Start_Inicio">
+        <dc:Bounds x="125" y="105" width="45" height="45"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_LlamaEnviaInforme" bpmnElement="Task_LlamaEnviaInforme">
+        <dc:Bounds x="215" y="82" width="220" height="95"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DerivaAuxiliar" bpmnElement="Task_DerivaAuxiliar">
+        <dc:Bounds x="175" y="300" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibeExpedientes" bpmnElement="Task_RecibeExpedientes">
+        <dc:Bounds x="520" y="275" width="200" height="90"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_FinMes" bpmnElement="Task_FinMes">
+        <dc:Bounds x="770" y="275" width="195" height="90"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubProcess_CompraCajaChica" bpmnElement="SubProcess_CompraCajaChica" isExpanded="false">
+        <dc:Bounds x="1170" y="275" width="190" height="90"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_RequiereReposicion" bpmnElement="Gateway_RequiereReposicion">
+        <dc:Bounds x="210" y="490" width="55" height="55"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RealizaMantenimiento" bpmnElement="Task_RealizaMantenimiento">
+        <dc:Bounds x="365" y="475" width="170" height="85"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformeFotograma" bpmnElement="Task_InformeFotograma">
+        <dc:Bounds x="590" y="465" width="235" height="105"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformaNoExistencia" bpmnElement="Task_InformaNoExistencia">
+        <dc:Bounds x="1110" y="465" width="210" height="95"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_HayProducto" bpmnElement="Gateway_HayProducto">
+        <dc:Bounds x="210" y="700" width="55" height="55"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EntregaProducto" bpmnElement="Task_EntregaProducto">
+        <dc:Bounds x="600" y="685" width="250" height="90"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReportaNoExistencia" bpmnElement="Task_ReportaNoExistencia">
+        <dc:Bounds x="1090" y="730" width="220" height="85"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibeReportes" bpmnElement="Task_RecibeReportes">
+        <dc:Bounds x="860" y="945" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_Fin" bpmnElement="End_Fin">
+        <dc:Bounds x="1130" y="957" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_01" bpmnElement="Flow_01">
+        <di:waypoint x="170" y="127"/>
+        <di:waypoint x="215" y="127"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_02" bpmnElement="Flow_02">
+        <di:waypoint x="325" y="177"/>
+        <di:waypoint x="325" y="260"/>
+        <di:waypoint x="250" y="260"/>
+        <di:waypoint x="250" y="300"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_03" bpmnElement="Flow_03">
+        <di:waypoint x="250" y="380"/>
+        <di:waypoint x="250" y="490"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_04_No" bpmnElement="Flow_04_No">
+        <di:waypoint x="265" y="517"/>
+        <di:waypoint x="365" y="517"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_05_Si" bpmnElement="Flow_05_Si">
+        <di:waypoint x="237" y="545"/>
+        <di:waypoint x="237" y="700"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_06_Si" bpmnElement="Flow_06_Si">
+        <di:waypoint x="265" y="727"/>
+        <di:waypoint x="600" y="727"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_07_Entrega" bpmnElement="Flow_07_Entrega">
+        <di:waypoint x="725" y="685"/>
+        <di:waypoint x="725" y="620"/>
+        <di:waypoint x="450" y="620"/>
+        <di:waypoint x="450" y="560"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_08_No" bpmnElement="Flow_08_No">
+        <di:waypoint x="237" y="755"/>
+        <di:waypoint x="237" y="820"/>
+        <di:waypoint x="1200" y="820"/>
+        <di:waypoint x="1200" y="815"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_09" bpmnElement="Flow_09">
+        <di:waypoint x="1200" y="730"/>
+        <di:waypoint x="1200" y="560"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10" bpmnElement="Flow_10">
+        <di:waypoint x="1215" y="465"/>
+        <di:waypoint x="1215" y="410"/>
+        <di:waypoint x="1265" y="410"/>
+        <di:waypoint x="1265" y="365"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_11" bpmnElement="Flow_11">
+        <di:waypoint x="1170" y="320"/>
+        <di:waypoint x="320" y="320"/>
+        <di:waypoint x="320" y="450"/>
+        <di:waypoint x="450" y="450"/>
+        <di:waypoint x="450" y="475"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_12" bpmnElement="Flow_12">
+        <di:waypoint x="535" y="517"/>
+        <di:waypoint x="590" y="517"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_13" bpmnElement="Flow_13">
+        <di:waypoint x="707" y="465"/>
+        <di:waypoint x="707" y="405"/>
+        <di:waypoint x="620" y="405"/>
+        <di:waypoint x="620" y="365"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_14" bpmnElement="Flow_14">
+        <di:waypoint x="720" y="320"/>
+        <di:waypoint x="770" y="320"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_15" bpmnElement="Flow_15">
+        <di:waypoint x="867" y="365"/>
+        <di:waypoint x="867" y="920"/>
+        <di:waypoint x="950" y="920"/>
+        <di:waypoint x="950" y="945"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="1040" y="985"/>
+        <di:waypoint x="1130" y="982"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

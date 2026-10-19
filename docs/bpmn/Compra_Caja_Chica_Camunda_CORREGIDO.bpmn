@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_CompraCajaChica" targetNamespace="http://sigta.emi.bo/bpmn/compra-caja-chica" exporter="Camunda Modeler" exporterVersion="5.x" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7">
+  <bpmn:process id="Process_CompraCajaChica" name="DIAGRAMA DE BPMN DE COMPRA DE CAJA CHICA" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_CompraCajaChica">
+      <bpmn:lane id="Lane_UnidadSolicitante" name="Unidad Solicitante">
+        <bpmn:flowNodeRef>Start_Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarExpediente</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirPedido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregaDescargo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_OAF" name="OAF">
+        <bpmn:flowNodeRef>Task_EvaluarSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CalificaSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_NoCalifica</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarCertificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarExpedienteCompleto</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Tesoreria" name="Tesorería">
+        <bpmn:flowNodeRef>Task_VerificarExpediente</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DesembolsarDinero</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirDocumentos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarArchivar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Director" name="Director">
+        <bpmn:flowNodeRef>Task_VistoBueno</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ComprasAlmacen" name="Encargado de Compras y Almacén">
+        <bpmn:flowNodeRef>Task_CompraPedido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarAlmacen</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Inicio" name="INICIO"/>
+    <bpmn:task id="Task_EnviarExpediente" name="ENVIAR EXPEDIENTE"/>
+    <bpmn:task id="Task_EvaluarSolicitud" name="EVALUAR SOLICITUD Y VERIFICAR PRESUPUESTO"/>
+    <bpmn:exclusiveGateway id="Gateway_CalificaSolicitud" name="¿CALIFICA LA SOLICITUD?"/>
+    <bpmn:endEvent id="End_NoCalifica" name="END"/>
+    <bpmn:task id="Task_GenerarCertificacion" name="GENERAR Y ADJUNTAR CERTIFICACIÓN PRESUPUESTARIA"/>
+    <bpmn:task id="Task_EnviarExpedienteCompleto" name="ENVIAR EXPEDIENTE COMPLETO"/>
+    <bpmn:task id="Task_VerificarExpediente" name="VERIFICA TODO EL EXPEDIENTE"/>
+    <bpmn:task id="Task_DesembolsarDinero" name="DESEMBOLSA DINERO"/>
+    <bpmn:task id="Task_VistoBueno" name="LE DA EL VISTO BUENO Y DERIVA A TESORERÍA"/>
+    <bpmn:task id="Task_CompraPedido" name="COMPRA EL PEDIDO"/>
+    <bpmn:task id="Task_RegistrarAlmacen" name="REGISTRA ENTRADA Y SALIDA DE ALMACÉN"/>
+    <bpmn:task id="Task_RecibirPedido" name="RECIBE EL PEDIDO CON UN ACTA DE CONFORMIDAD"/>
+    <bpmn:task id="Task_EntregaDescargo" name="ENTREGA DE DOCUMENTOS DE DESCARGO"/>
+    <bpmn:task id="Task_RecibirDocumentos" name="RECIBE TODOS LOS DOCUMENTOS"/>
+    <bpmn:task id="Task_VerificarArchivar" name="VERIFICA Y ARCHIVA LOS DOCUMENTOS"/>
+    <bpmn:endEvent id="End_Fin" name="FIN"/>
+    <bpmn:dataObject id="DataObject_Expediente"/>
+    <bpmn:dataObjectReference id="DataRef_Expediente" name="INFORME&#10;-POA&#10;-PEDIDO&#10;PROFORMA" dataObjectRef="DataObject_Expediente"/>
+    <bpmn:dataObject id="DataObject_Descargo"/>
+    <bpmn:dataObjectReference id="DataRef_Descargo" name="-FACTURA&#10;-ACTA DE CONFORMIDAD&#10;-FOTOGRAMA" dataObjectRef="DataObject_Descargo"/>
+    <bpmn:association id="Association_Expediente" sourceRef="Task_EnviarExpediente" targetRef="DataRef_Expediente"/>
+    <bpmn:association id="Association_Descargo" sourceRef="Task_EntregaDescargo" targetRef="DataRef_Descargo"/>
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="Start_Inicio" targetRef="Task_EnviarExpediente"/>
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_EnviarExpediente" targetRef="Task_EvaluarSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_EvaluarSolicitud" targetRef="Gateway_CalificaSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_04_NO" sourceRef="Gateway_CalificaSolicitud" targetRef="End_NoCalifica" name="NO"/>
+    <bpmn:sequenceFlow id="Flow_05_SI" sourceRef="Gateway_CalificaSolicitud" targetRef="Task_GenerarCertificacion" name="SI"/>
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_GenerarCertificacion" targetRef="Task_EnviarExpedienteCompleto"/>
+    <bpmn:sequenceFlow id="Flow_07" sourceRef="Task_EnviarExpedienteCompleto" targetRef="Task_VerificarExpediente"/>
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Task_VerificarExpediente" targetRef="Task_VistoBueno"/>
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_VistoBueno" targetRef="Task_DesembolsarDinero"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_DesembolsarDinero" targetRef="Task_CompraPedido"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_CompraPedido" targetRef="Task_RegistrarAlmacen"/>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_RegistrarAlmacen" targetRef="Task_RecibirPedido"/>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_RecibirPedido" targetRef="Task_EntregaDescargo"/>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_EntregaDescargo" targetRef="Task_RecibirDocumentos"/>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_RecibirDocumentos" targetRef="Task_VerificarArchivar"/>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_VerificarArchivar" targetRef="End_Fin"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_CompraCajaChica">
+    <bpmn:participant id="Participant_CompraCajaChica" name="DIAGRAMA DE BPMN DE COMPRA DE CAJA CHICA" processRef="Process_CompraCajaChica"/>
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_CompraCajaChica">
+    <bpmndi:BPMNPlane id="BPMNPlane_CompraCajaChica" bpmnElement="Collaboration_CompraCajaChica">
+      <bpmndi:BPMNShape id="Shape_Pool" bpmnElement="Participant_CompraCajaChica" isHorizontal="true">
+        <dc:Bounds x="35" y="35" width="2050" height="1045"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Unidad" bpmnElement="Lane_UnidadSolicitante" isHorizontal="true">
+        <dc:Bounds x="70" y="35" width="2015" height="220"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_OAF" bpmnElement="Lane_OAF" isHorizontal="true">
+        <dc:Bounds x="70" y="255" width="2015" height="190"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Tesoreria" bpmnElement="Lane_Tesoreria" isHorizontal="true">
+        <dc:Bounds x="70" y="445" width="2015" height="190"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Director" bpmnElement="Lane_Director" isHorizontal="true">
+        <dc:Bounds x="70" y="635" width="2015" height="260"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Compras" bpmnElement="Lane_ComprasAlmacen" isHorizontal="true">
+        <dc:Bounds x="70" y="895" width="2015" height="185"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start_Inicio" bpmnElement="Start_Inicio">
+        <dc:Bounds x="125" y="100" width="55" height="55"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EnviarExpediente" bpmnElement="Task_EnviarExpediente">
+        <dc:Bounds x="220" y="88" width="165" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_DataRef_Expediente" bpmnElement="DataRef_Expediente">
+        <dc:Bounds x="460" y="78" width="150" height="95"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EvaluarSolicitud" bpmnElement="Task_EvaluarSolicitud">
+        <dc:Bounds x="210" y="290" width="190" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_CalificaSolicitud" bpmnElement="Gateway_CalificaSolicitud">
+        <dc:Bounds x="450" y="300" width="60" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_NoCalifica" bpmnElement="End_NoCalifica">
+        <dc:Bounds x="470" y="375" width="45" height="45"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_GenerarCertificacion" bpmnElement="Task_GenerarCertificacion">
+        <dc:Bounds x="560" y="290" width="195" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EnviarExpedienteCompleto" bpmnElement="Task_EnviarExpedienteCompleto">
+        <dc:Bounds x="800" y="290" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerificarExpediente" bpmnElement="Task_VerificarExpediente">
+        <dc:Bounds x="825" y="485" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DesembolsarDinero" bpmnElement="Task_DesembolsarDinero">
+        <dc:Bounds x="1020" y="485" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VistoBueno" bpmnElement="Task_VistoBueno">
+        <dc:Bounds x="810" y="695" width="205" height="85"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompraPedido" bpmnElement="Task_CompraPedido">
+        <dc:Bounds x="920" y="940" width="155" height="75"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RegistrarAlmacen" bpmnElement="Task_RegistrarAlmacen">
+        <dc:Bounds x="1145" y="940" width="180" height="75"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirPedido" bpmnElement="Task_RecibirPedido">
+        <dc:Bounds x="1050" y="88" width="225" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EntregaDescargo" bpmnElement="Task_EntregaDescargo">
+        <dc:Bounds x="1320" y="88" width="185" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_DataRef_Descargo" bpmnElement="DataRef_Descargo">
+        <dc:Bounds x="1555" y="65" width="245" height="125"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecibirDocumentos" bpmnElement="Task_RecibirDocumentos">
+        <dc:Bounds x="1345" y="485" width="195" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerificarArchivar" bpmnElement="Task_VerificarArchivar">
+        <dc:Bounds x="1605" y="485" width="185" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_Fin" bpmnElement="End_Fin">
+        <dc:Bounds x="1860" y="500" width="55" height="55"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_01" bpmnElement="Flow_01">
+        <di:waypoint x="180" y="128"/>
+        <di:waypoint x="220" y="128"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_02" bpmnElement="Flow_02">
+        <di:waypoint x="302" y="168"/>
+        <di:waypoint x="302" y="290"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_03" bpmnElement="Flow_03">
+        <di:waypoint x="400" y="330"/>
+        <di:waypoint x="450" y="330"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_04_NO" bpmnElement="Flow_04_NO">
+        <di:waypoint x="480" y="360"/>
+        <di:waypoint x="480" y="375"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_05_SI" bpmnElement="Flow_05_SI">
+        <di:waypoint x="510" y="330"/>
+        <di:waypoint x="560" y="330"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_06" bpmnElement="Flow_06">
+        <di:waypoint x="755" y="330"/>
+        <di:waypoint x="800" y="330"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_07" bpmnElement="Flow_07">
+        <di:waypoint x="875" y="370"/>
+        <di:waypoint x="875" y="485"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_08" bpmnElement="Flow_08">
+        <di:waypoint x="900" y="565"/>
+        <di:waypoint x="900" y="660"/>
+        <di:waypoint x="912" y="660"/>
+        <di:waypoint x="912" y="695"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_09" bpmnElement="Flow_09">
+        <di:waypoint x="1015" y="738"/>
+        <di:waypoint x="1060" y="738"/>
+        <di:waypoint x="1060" y="565"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10" bpmnElement="Flow_10">
+        <di:waypoint x="1095" y="565"/>
+        <di:waypoint x="1095" y="900"/>
+        <di:waypoint x="998" y="900"/>
+        <di:waypoint x="998" y="940"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_11" bpmnElement="Flow_11">
+        <di:waypoint x="1075" y="978"/>
+        <di:waypoint x="1145" y="978"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_12" bpmnElement="Flow_12">
+        <di:waypoint x="1235" y="940"/>
+        <di:waypoint x="1235" y="600"/>
+        <di:waypoint x="1162" y="600"/>
+        <di:waypoint x="1162" y="168"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_13" bpmnElement="Flow_13">
+        <di:waypoint x="1275" y="128"/>
+        <di:waypoint x="1320" y="128"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_14" bpmnElement="Flow_14">
+        <di:waypoint x="1412" y="168"/>
+        <di:waypoint x="1412" y="445"/>
+        <di:waypoint x="1442" y="445"/>
+        <di:waypoint x="1442" y="485"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_15" bpmnElement="Flow_15">
+        <di:waypoint x="1540" y="525"/>
+        <di:waypoint x="1605" y="525"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="1790" y="525"/>
+        <di:waypoint x="1860" y="527"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Association_Expediente" bpmnElement="Association_Expediente">
+        <di:waypoint x="385" y="128"/>
+        <di:waypoint x="460" y="128"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Association_Descargo" bpmnElement="Association_Descargo">
+        <di:waypoint x="1505" y="128"/>
+        <di:waypoint x="1555" y="128"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
