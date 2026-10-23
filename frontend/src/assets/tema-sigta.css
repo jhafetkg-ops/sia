@@ -1,0 +1,475 @@
+/* =========================================================
+   SIGTA — IDENTIDAD VISUAL ÚNICA
+
+   Un solo lenguaje visual para todo el sistema: azul marino,
+   blanco y amarillo mostaza. Cualquier pantalla nueva debe
+   usar estas variables en lugar de colores propios, para que
+   el sistema no vuelva a parecer varios sistemas distintos.
+========================================================= */
+
+:root {
+
+  /* ----- Azul institucional EMI -----
+     Azul marino institucional, con el amarillo EMI como acento. */
+  --sigta-azul: #123A6B;
+  --sigta-azul-oscuro: #0C2A4F;
+  --sigta-azul-medio: #1D5090;
+  --sigta-azul-claro: #DDE9F5;
+  --sigta-azul-texto-claro: #C2DBF2;
+  --sigta-azul-tenue: #F0F6FC;
+
+  /* ----- Amarillo EMI (acento) ----- */
+  --sigta-mostaza: #FFC72C;
+  --sigta-mostaza-oscuro: #B98F00;
+  --sigta-mostaza-clara: #FFD760;
+  --sigta-mostaza-suave: #FFF8DA;
+
+  /* ----- Neutros ----- */
+  --sigta-blanco: #FFFFFF;
+  --sigta-fondo: #F4F8FC;
+  --sigta-superficie: #FFFFFF;
+  --sigta-borde: #D7E3EF;
+  --sigta-borde-suave: #EAF1F8;
+  --sigta-texto: #14304F;
+  --sigta-texto-suave: #5B7189;
+  --sigta-texto-tenue: #8CA0B4;
+
+  /* ----- Estados ----- */
+  --sigta-exito: #16734A;
+  --sigta-exito-fondo: #E8F7EF;
+  --sigta-error: #B42318;
+  --sigta-error-fondo: #FDECEB;
+  --sigta-alerta: #A87F00;
+  --sigta-alerta-fondo: #FFF6DC;
+
+  /* ----- Formas ----- */
+  --sigta-radio: 10px;
+  --sigta-radio-chico: 7px;
+  --sigta-sombra: 0 4px 16px rgba(11, 87, 164, .10);
+  --sigta-sombra-fuerte: 0 10px 30px rgba(11, 87, 164, .18);
+  --sigta-fuente: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
+
+  /* ----- Medidas comunes -----
+     Una sola barra lateral, una sola escala tipográfica y un solo
+     ritmo de espaciado para que todas las pantallas se sientan
+     parte del mismo sistema. */
+  --sigta-sidebar: 260px;
+  --sigta-espacio: 28px;
+
+  --sigta-titulo: 27px;
+  --sigta-subtitulo: 19px;
+  --sigta-seccion: 16px;
+  --sigta-texto-tam: 13px;
+  --sigta-chico: 11px;
+}
+
+
+/* =========================================================
+   BASE
+========================================================= */
+
+html,
+body,
+#app {
+  background: var(--sigta-fondo);
+  color: var(--sigta-texto);
+  font-family: var(--sigta-fuente);
+}
+
+
+/* =========================================================
+   BARRA LATERAL
+
+   Todas las barras del sistema comparten el mismo azul y el
+   mismo acento mostaza en la opción activa.
+========================================================= */
+
+.sigta-role-layout > aside,
+aside.sidebar,
+.layout > aside,
+.shell > .side {
+  background: var(--sigta-azul);
+  color: var(--sigta-blanco);
+}
+
+aside.sidebar .logo,
+.sigta-role-layout > aside .brand > b,
+.sigta-role-layout > aside .brand > span {
+  background: var(--sigta-mostaza);
+  color: var(--sigta-azul);
+}
+
+aside.sidebar .menu-item.router-link-active,
+.sigta-role-layout > aside button.active {
+  border-left: 3px solid var(--sigta-mostaza);
+  background: rgba(255, 255, 255, .12);
+  color: var(--sigta-mostaza-clara);
+  font-weight: 700;
+}
+
+aside.sidebar .logout,
+.shell > .side .salir {
+  background: var(--sigta-mostaza);
+  color: var(--sigta-texto);
+  font-weight: 800;
+}
+
+aside.sidebar .logout:hover {
+  background: var(--sigta-mostaza-clara);
+}
+
+
+/* =========================================================
+   ENCABEZADOS Y ACENTOS
+========================================================= */
+
+.sigta-hero,
+.hero {
+  background: linear-gradient(120deg, var(--sigta-azul), var(--sigta-azul-medio));
+  border-bottom: 4px solid var(--sigta-mostaza);
+  color: var(--sigta-blanco);
+}
+
+.sigta-eyebrow,
+.eyebrow {
+  color: var(--sigta-mostaza-clara);
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+
+/* =========================================================
+   BOTONES
+========================================================= */
+
+.sigta-btn,
+button.primary,
+button.primario,
+.primary-action,
+.btn-aprobar {
+  background: var(--sigta-azul);
+  color: var(--sigta-blanco);
+  border: 1px solid var(--sigta-azul);
+  border-radius: var(--sigta-radio-chico);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sigta-btn:hover,
+button.primary:hover,
+button.primario:hover,
+.primary-action:hover,
+.btn-aprobar:hover {
+  background: var(--sigta-azul-oscuro);
+  border-color: var(--sigta-azul-oscuro);
+}
+
+.sigta-btn-acento {
+  background: var(--sigta-mostaza);
+  color: var(--sigta-azul);
+  border: 1px solid var(--sigta-mostaza);
+  border-radius: var(--sigta-radio-chico);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sigta-btn-acento:hover {
+  background: var(--sigta-mostaza-clara);
+}
+
+button:disabled,
+.sigta-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SUPERFICIES
+========================================================= */
+
+.sigta-card,
+.panel,
+.card {
+  background: var(--sigta-superficie);
+  border: 1px solid var(--sigta-borde);
+  border-radius: var(--sigta-radio);
+}
+
+
+/* =========================================================
+   AVISOS
+========================================================= */
+
+.sigta-aviso-error {
+  background: var(--sigta-error-fondo);
+  border-left: 4px solid var(--sigta-error);
+  color: var(--sigta-error);
+}
+
+.sigta-aviso-ok {
+  background: var(--sigta-exito-fondo);
+  border-left: 4px solid var(--sigta-exito);
+  color: var(--sigta-exito);
+}
+
+.sigta-aviso-alerta {
+  background: var(--sigta-alerta-fondo);
+  border-left: 4px solid var(--sigta-mostaza);
+  color: var(--sigta-alerta);
+}
+
+
+/* =========================================================
+   TIPOGRAFÍA Y RITMO COMUNES
+
+   Se aplican con !important porque cada pantalla trae su
+   propio <style scoped>, que de otro modo gana por
+   especificidad y vuelve a romper la unidad visual.
+========================================================= */
+
+body,
+input,
+select,
+textarea,
+button {
+  font-family: var(--sigta-fuente) !important;
+}
+
+main h1 {
+  font-size: var(--sigta-titulo) !important;
+  line-height: 1.25 !important;
+  margin: 6px 0 !important;
+}
+
+main h2 {
+  font-size: var(--sigta-subtitulo) !important;
+  line-height: 1.3 !important;
+}
+
+main h3 {
+  font-size: var(--sigta-seccion) !important;
+  line-height: 1.35 !important;
+}
+
+main {
+  font-size: var(--sigta-texto-tam);
+}
+
+/* Un solo ancho y un solo respiro para todas las barras laterales. */
+aside.sidebar,
+.sigta-role-layout > aside,
+.layout > aside,
+.shell > .side {
+  width: var(--sigta-sidebar) !important;
+  min-width: var(--sigta-sidebar) !important;
+  padding: 20px 14px !important;
+}
+
+/* Y un solo margen de contenido en las pantallas de rol. */
+.layout > main,
+.shell > main,
+.sigta-role-layout > main {
+  padding: var(--sigta-espacio) !important;
+}
+
+@media (max-width: 760px) {
+
+  aside.sidebar,
+  .sigta-role-layout > aside,
+  .layout > aside,
+  .shell > .side {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .layout > main,
+  .shell > main,
+  .sigta-role-layout > main {
+    padding: 16px !important;
+  }
+}
+
+
+/* =========================================================
+   PIE DE LA BARRA LATERAL
+
+   El cierre de sesión se veía distinto en cada panel (texto
+   plano en unos, botón mostaza en otros): aquí queda uno solo.
+========================================================= */
+
+aside.sidebar .logout,
+.shell > .side .salir,
+.sigta-role-layout > aside .bottom button,
+.layout > aside .bottom button {
+  width: 100% !important;
+  min-height: 46px !important;
+  margin-top: auto !important;
+  border: 0 !important;
+  border-radius: var(--sigta-radio-chico) !important;
+  background: var(--sigta-mostaza) !important;
+  color: var(--sigta-texto) !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+}
+
+.sigta-role-layout > aside .bottom button:hover,
+aside.sidebar .logout:hover,
+.shell > .side .salir:hover {
+  background: var(--sigta-mostaza-clara) !important;
+}
+
+/* El acento activo del menú es siempre el mismo. */
+.sigta-role-layout > aside button.active,
+.layout > aside button.active {
+  box-shadow: inset 3px 0 var(--sigta-mostaza) !important;
+  color: var(--sigta-mostaza-clara) !important;
+}
+
+
+/* =========================================================
+   LEGIBILIDAD DENTRO DE LA BARRA LATERAL
+
+   Los textos secundarios heredaban un gris pensado para fondo
+   blanco y sobre el azul quedaban casi invisibles.
+========================================================= */
+
+aside.sidebar .brand span,
+aside.sidebar .section-title,
+.sigta-role-layout > aside .brand small,
+.sigta-role-layout > aside .profile small,
+.sigta-role-layout > aside > p,
+.layout > aside .section-title,
+.shell > .side .brand small {
+  color: var(--sigta-azul-texto-claro) !important;
+}
+
+aside.sidebar .menu-item,
+.sigta-role-layout > aside button,
+.layout > aside button {
+  color: var(--sigta-blanco) !important;
+}
+
+aside.sidebar .menu-item.router-link-active,
+.sigta-role-layout > aside button.active,
+.layout > aside button.active {
+  color: var(--sigta-mostaza) !important;
+}
+
+
+/* =========================================================
+   BARRA LATERAL — ACABADO
+
+   Antes: emoji de colores, opciones sueltas y mucho vacío.
+   Ahora: iconos de trazo alineados, jerarquía clara y un
+   acento mostaza que marca dónde está el usuario.
+========================================================= */
+
+aside.sidebar,
+.sigta-role-layout > aside,
+.layout > aside,
+.shell > .side {
+  background:
+    linear-gradient(180deg,
+      var(--sigta-azul) 0%,
+      var(--sigta-azul-oscuro) 100%) !important;
+  border-right: 3px solid var(--sigta-mostaza);
+}
+
+/* Marca */
+aside.sidebar .brand-row,
+.sigta-role-layout > aside .brand {
+  border-bottom: 1px solid rgba(255, 255, 255, .14) !important;
+}
+
+/* Rótulo de sección */
+aside.sidebar .section-title,
+.sigta-role-layout > aside > p,
+.layout > aside .section-title {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.4px !important;
+  text-transform: uppercase;
+  opacity: .8;
+}
+
+/* Opciones */
+aside.sidebar .menu-item,
+.sigta-role-layout > aside button:not(.menu-toggle),
+.layout > aside button:not(.menu-toggle) {
+  min-height: 42px !important;
+  gap: 12px !important;
+  padding: 0 12px !important;
+  border-radius: var(--sigta-radio-chico) !important;
+  border-left: 3px solid transparent !important;
+  font-size: var(--sigta-texto-tam) !important;
+  font-weight: 600 !important;
+  transition: background .18s ease, color .18s ease;
+}
+
+aside.sidebar .menu-item:hover,
+.sigta-role-layout > aside button:not(.menu-toggle):hover,
+.layout > aside button:not(.menu-toggle):hover {
+  background: rgba(255, 255, 255, .08) !important;
+}
+
+aside.sidebar .menu-item.router-link-active,
+.sigta-role-layout > aside button.active,
+.layout > aside button.active {
+  border-left-color: var(--sigta-mostaza) !important;
+  background: rgba(255, 255, 255, .13) !important;
+  box-shadow: none !important;
+}
+
+/* Iconos de trazo: mismo tamaño y peso visual en todo el sistema. */
+aside .icono-sigta {
+  width: 19px;
+  height: 19px;
+  opacity: .92;
+}
+
+aside .menu-item.router-link-active .icono-sigta,
+aside button.active .icono-sigta {
+  opacity: 1;
+}
+
+/* Contadores */
+.sigta-role-layout > aside button em,
+.layout > aside button em {
+  min-width: 22px;
+  text-align: center;
+  background: rgba(255, 255, 255, .16) !important;
+  border-radius: 11px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.sigta-role-layout > aside button.active em,
+.layout > aside button.active em {
+  background: var(--sigta-mostaza) !important;
+  color: var(--sigta-texto) !important;
+}
+
+
+/* =========================================================
+   ICONOS SOBRE FONDO AZUL
+
+   Los recuadros de icono de las tarjetas tienen fondo azul:
+   el trazo va en mostaza para que se lea.
+========================================================= */
+
+.quick-icon .icono-sigta,
+.documento-icono .icono-sigta,
+.card-icon .icono-sigta,
+.tile-icon .icono-sigta {
+  color: var(--sigta-mostaza);
+}
+
+.quick-icon,
+.documento-icono,
+.card-icon,
+.tile-icon {
+  display: grid !important;
+  place-items: center !important;
+  border-radius: var(--sigta-radio-chico) !important;
+}
