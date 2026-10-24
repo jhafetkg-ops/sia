@@ -1140,10 +1140,10 @@ class TicketSerializer(
 
             estado_nuevo = (
                 EstadoTicket.objects
-                .get(
-                    codigo="NUEVO",
-                    activo=True
-                )
+                .get_or_create(
+                    codigo="ABIERTO",
+                    defaults={"nombre": "Abierto", "activo": True, "es_inicial": True}
+                )[0]
             )
 
 
@@ -1152,7 +1152,7 @@ class TicketSerializer(
             raise serializers.ValidationError(
                 {
                     "estado": (
-                        "No existe el estado NUEVO "
+                        "No existe el estado ABIERTO "
                         "activo en el sistema."
                     )
                 }
