@@ -297,7 +297,10 @@ class SolicitudCompraViewSet(
         # recibe directamente la solicitud de compra (no existe una
         # jefatura que se la asigne previamente), así que ve la misma
         # bandeja que el resto de los actores del proceso.
-        if tiene_permiso(usuario, "VER_COMPRAS"):
+        if tiene_permiso(usuario, "VER_COMPRAS") or (
+            self.action == "visto_bueno_director"
+            and usuario.groups.filter(name="Jefe administrativo").exists()
+        ):
             return queryset
 
 
@@ -563,7 +566,14 @@ class SolicitudCompraViewSet(
         )
 
     def _transicion(self, request, solicitud, permiso, origen, destino, accion, detalle):
-        if not tiene_permiso(request.user, permiso):
+        es_jefe_aprobador = False
+        if destino == "APROBADO_PARA_DESEMBOLSO":
+            if solicitud.solicitante_id == request.user.id:
+                return Response({"detalle": "No puede aprobar su propia compra."}, status=403)
+            es_jefe_aprobador = request.user.groups.filter(name="Jefe administrativo").exists()
+            if solicitud.monto_estimado is not None and solicitud.monto_estimado > Decimal("300") and not es_jefe_aprobador:
+                return Response({"detalle": "Las compras mayores a Bs 300 solo pueden ser aprobadas por el grupo Jefe administrativo."}, status=403)
+        if not tiene_permiso(request.user, permiso) and not es_jefe_aprobador:
             return respuesta_sin_permiso(permiso)
         if solicitud.cerrado_inmutable:
             return Response({"detalle": "El expediente está cerrado y es inmutable."}, status=status.HTTP_409_CONFLICT)
