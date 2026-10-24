@@ -1160,6 +1160,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+        try:
+            password_validation.validate_password(password, user=usuario)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError({"password": list(error.messages)})
 
         usuario.set_password(
             password
@@ -1283,6 +1287,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
         # --------------------------------------------------
 
         if password:
+
+            try:
+                password_validation.validate_password(password, user=instance)
+            except DjangoValidationError as error:
+                raise serializers.ValidationError({"password": list(error.messages)})
 
             instance.set_password(
                 password
