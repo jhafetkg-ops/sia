@@ -569,6 +569,30 @@ class SolicitudCompraViewSet(
             return Response({"detalle": "El expediente está cerrado y es inmutable."}, status=status.HTTP_409_CONFLICT)
         if solicitud.estado not in origen:
             return Response({"detalle": f"Transición no permitida desde {solicitud.estado}."}, status=status.HTTP_409_CONFLICT)
+        if (
+            destino in {
+                "EVALUADO_PENDIENTE_CERTIFICACION",
+                "VERIFICADO_PENDIENTE_AUTORIZACION",
+                "APROBADO_PARA_DESEMBOLSO",
+            }
+            and solicitud.monto_estimado is not None
+            and solicitud.monto_estimado > Decimal("500")
+        ):
+            proveedores = {
+                " ".join(proveedor.split()).casefold()
+                for proveedor in solicitud.cotizaciones
+                .exclude(documento="").exclude(documento__isnull=True)
+                .values_list("proveedor", flat=True)
+                if proveedor and proveedor.strip()
+            }
+            if len(proveedores) < 3:
+                return Response({
+                    "detalle": (
+                        "Para compras mayores a Bs 500 debe adjuntar al menos "
+                        "3 cotizaciones de proveedores distintos antes de avanzar "
+                        "a aprobación."
+                    )
+                }, status=status.HTTP_400_BAD_REQUEST)
         solicitud.estado = destino
         solicitud.save()
         registrar_bitacora(request=request, accion=accion, modulo="Compras", detalle=f"{solicitud.codigo}: {detalle}", nivel="INFO")

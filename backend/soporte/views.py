@@ -1049,6 +1049,12 @@ class TicketViewSet(
         )
 
 
+        if ticket.categoria and (
+            ticket.categoria.codigo.strip().upper() in {"RED", "REDES", "SERVIDOR", "SERVIDORES"}
+            or ticket.categoria.nombre.strip().casefold() in {"red", "redes", "servidor", "servidores"}
+        ):
+            prioridad = "ALTA"
+
         if prioridad not in SLA_POR_PRIORIDAD:
 
             return Response(
