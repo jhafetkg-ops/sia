@@ -3,6 +3,7 @@ from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
+from django.conf import settings
 from django.core.files.base import ContentFile
 
 from rest_framework import (
@@ -135,12 +136,7 @@ def _categoria_por_defecto():
 #
 # ==========================================================
 
-SLA_POR_PRIORIDAD = {
-    "CRITICA": 4,
-    "ALTA": 8,
-    "MEDIA": 24,
-    "BAJA": 48,
-}
+SLA_POR_PRIORIDAD = settings.SIA_SLA_POR_PRIORIDAD
 
 
 # ==========================================================
@@ -1102,7 +1098,7 @@ class TicketViewSet(
 
 
         fecha_limite = (
-            ahora
+            ticket.creado_en
             +
             timedelta(
                 hours=horas_sla

@@ -267,6 +267,9 @@ LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'America/La_Paz'
 
+# R04: horas de atención desde la creación del ticket.
+SIA_SLA_POR_PRIORIDAD = {'CRITICA': 4, 'ALTA': 4, 'MEDIA': 24, 'BAJA': 72}
+
 USE_I18N = True
 
 USE_TZ = True
