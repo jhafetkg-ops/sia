@@ -15,6 +15,10 @@
     <main>
       <header class="tes-page-header"><div><h1>{{ titulo }}</h1><p>{{ subtitulo }}</p></div><UsuarioHeader @actualizar="cargar" /></header>
       <p v-if="errorCarga" class="tes-error" role="alert">{{ errorCarga }}</p>
+      <p v-if="saldoCaja" class="tes-help" role="status">
+        Caja Chica · {{ saldoCaja.mes }} · Fondo: Bs {{ saldoCaja.fondo }} ·
+        Comprometido: Bs {{ saldoCaja.gastado }} · Disponible: <strong>Bs {{ saldoCaja.saldo }}</strong>
+      </p>
       <section v-if="vista === 'resumen'" class="stats">
         <button @click="irA('desembolso')"><i><IconoSigta nombre="compras" :tamano="20" /></i><div><small>Por desembolsar</small><b>{{ porDesembolsar.length }}</b><p>autorizados por el Director</p></div></button>
         <button @click="irA('historial')"><i><IconoSigta nombre="historial" :tamano="20" /></i><div><small>Desembolsados</small><b>{{ desembolsados.length }}</b><p>entregas registradas</p></div></button>
@@ -108,6 +112,7 @@ import TesoreriaTabla from '../components/TesoreriaTabla.vue'
 import { usarGuardado } from '../utils/guardado.js'
 
 const router = useRouter()
+const saldoCaja = ref(null)
 const { mostrar: mostrarGuardado, texto: textoGuardado, tipo: tipoGuardado, animar: animarGuardado, ocultar: ocultarGuardado } = usarGuardado()
 const usuario = JSON.parse(localStorage.getItem('sigta_usuario') || '{}')
 const nombre = computed(() => usuario.nombre_completo || usuario.nombre || 'Tesorería')
@@ -153,9 +158,11 @@ async function api(url, options = {}) {
 }
 async function cargar() {
   cargando.value = true; errorCarga.value = ''
+  saldoCaja.value = null
   try {
     const datos = await api('/api/compras/solicitudes/?tesoreria=1')
     expedientes.value = Array.isArray(datos) ? datos : datos.results || []
+    saldoCaja.value = await api('/api/caja-chica/saldo/')
   } catch (e) { errorCarga.value = e.message } finally { cargando.value = false }
 }
 function irA(id) { vista.value = id; menuAbierto.value = false; expedienteActivo.value = null; detalle.value = null }
