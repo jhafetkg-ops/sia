@@ -15,6 +15,8 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db import transaction
+from django.db import connection
+import json
 from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
@@ -159,6 +161,11 @@ def respuesta_sin_permiso(codigo_permiso):
 class SolicitudCompraViewSet(
     viewsets.ModelViewSet
 ):
+    @action(detail=False, methods=['get'], url_path='saldo')
+    def saldo(self, request):
+        from .tesoreria import saldo_mensual
+        return Response({clave: str(valor) for clave, valor in saldo_mensual().items()})
+
 
     @action(detail=True, methods=['get', 'post'], url_path='actas-almacen')
     def actas_almacen(self, request, pk=None):
@@ -562,13 +569,32 @@ class SolicitudCompraViewSet(
             status=status.HTTP_200_OK
         )
 
+    @transaction.atomic
     def _transicion(self, request, solicitud, permiso, origen, destino, accion, detalle):
         if not tiene_permiso(request.user, permiso):
             return respuesta_sin_permiso(permiso)
+        if destino == "APROBADO_PARA_DESEMBOLSO":
+            # Un bloqueo común protege el fondo incluso para compras distintas.
+            if connection.vendor == 'postgresql':
+                with connection.cursor() as cursor:
+                    cursor.execute('SELECT pg_advisory_xact_lock(%s)', [9309001])
+            solicitud = SolicitudCompra.objects.select_for_update().get(pk=solicitud.pk)
         if solicitud.cerrado_inmutable:
             return Response({"detalle": "El expediente está cerrado y es inmutable."}, status=status.HTTP_409_CONFLICT)
         if solicitud.estado not in origen:
             return Response({"detalle": f"Transición no permitida desde {solicitud.estado}."}, status=status.HTTP_409_CONFLICT)
+        if destino == "APROBADO_PARA_DESEMBOLSO" and solicitud.via_adquisicion == "CAJA_CHICA":
+            from .tesoreria import saldo_mensual
+            if solicitud.monto_estimado is None or solicitud.monto_estimado <= 0:
+                return Response({"monto_estimado": "Registre un monto positivo antes de aprobar."}, status=400)
+            saldo = saldo_mensual()['saldo']
+            if solicitud.monto_estimado > saldo:
+                return Response({"detalle": f"Saldo mensual insuficiente. Disponible: Bs {saldo:.2f}."}, status=400)
+            registrar_bitacora(
+                request=request, accion='RESERVAR_FONDO_CAJA_CHICA', modulo='Compras',
+                detalle=json.dumps({'codigo': solicitud.codigo, 'monto': str(solicitud.monto_estimado)}),
+                nivel='INFO',
+            )
         solicitud.estado = destino
         solicitud.save()
         registrar_bitacora(request=request, accion=accion, modulo="Compras", detalle=f"{solicitud.codigo}: {detalle}", nivel="INFO")

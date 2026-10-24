@@ -1,5 +1,8 @@
 """Recibos imprimibles y respaldos privados de la entrega de fondos."""
 from decimal import Decimal
+import json
+from django.conf import settings
+from django.db.models import Sum
 from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -12,6 +15,29 @@ from auditoria.utils import registrar_bitacora
 from soporte.informes_pdf import _documento_pdf
 from .models import ReciboTesoreria, SolicitudCompra
 from .serializers import MontoEstimadoField
+
+
+def saldo_mensual():
+    from auditoria.models import Bitacora
+    hoy = timezone.localdate()
+    registros = Bitacora.objects.filter(
+        modulo='Compras', fecha__year=hoy.year, fecha__month=hoy.month,
+    )
+    reservas = {}
+    for detalle in registros.filter(accion='RESERVAR_FONDO_CAJA_CHICA').values_list('detalle', flat=True):
+        datos = json.loads(detalle)
+        reservas[datos['codigo']] = Decimal(datos['monto'])
+    # Las aprobaciones anteriores a R09 no guardaban el importe en la bitácora.
+    anteriores = {
+        detalle.split(':', 1)[0]
+        for detalle in registros.filter(accion='VISTO_BUENO_DIRECTOR').values_list('detalle', flat=True)
+    } - reservas.keys()
+    previo = SolicitudCompra.objects.filter(
+        codigo__in=anteriores, via_adquisicion='CAJA_CHICA',
+    ).aggregate(total=Sum('monto_estimado'))['total'] or Decimal('0')
+    gastado = sum(reservas.values(), Decimal('0')) + previo
+    return {'mes': hoy.strftime('%Y-%m'), 'fondo': settings.SIA_FONDO_MENSUAL,
+            'gastado': gastado, 'saldo': settings.SIA_FONDO_MENSUAL - gastado}
 
 
 def datos_entrega(data):
@@ -33,7 +59,8 @@ def pdf_recibo(datos):
         [('REQUERIMIENTO', [('Objeto de la compra', datos['titulo']), ('Área solicitante', datos['area']), ('Solicitante', datos['solicitante'])]),
          ('ENTREGA DE FONDOS', [('Importe entregado', f"Bs. {datos['monto']}"), ('Método de desembolso', datos['metodo']), ('Nombre completo de quien recibe', datos['recibe']), ('Nombre completo de quien entrega', datos['entrega'])]),
          ('CONFORMIDAD', [('Declaración', 'Quien recibe declara haber recibido el importe indicado para el requerimiento identificado en este recibo.'), ('Respaldo', 'Imprimir, firmar por ambas partes y adjuntar el PDF firmado en Tesorería. Para transferencia o QR, adjuntar también el comprobante de la operación.')])],
-        [('Referencia del recibo', datos['referencia']), ('Fecha de emisión', datos['fecha'])],
+        [('Referencia del recibo', datos['referencia']), ('Fecha de emisión', datos['fecha']),
+         ('Saldo mensual disponible', f"Bs. {datos.get('saldo_restante', 'No registrado')}")],
         unidad='TESORERÍA', espaciado=True, firmas=[([], datos['recibe'], 'Firma de quien recibe'), ([], datos['entrega'], 'Firma de quien entrega')],
     )
 
@@ -60,6 +87,7 @@ def recibos(view, request):
     if s.estado != 'APROBADO_PARA_DESEMBOLSO' or s.cerrado_inmutable:
         return Response({'detalle': 'Solo se generan recibos de expedientes pendientes de desembolso.'}, status=409)
     datos = datos_entrega(request.data)
+    datos['saldo_restante'] = str(saldo_mensual()['saldo'])
     referencia = uuid4()
     datos.update(codigo=s.codigo, titulo=s.titulo, solicitante=s.solicitante.nombre_completo,
                  area=s.area.nombre if s.area_id else 'Sin área', entrega=request.user.nombre_completo,

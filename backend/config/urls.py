@@ -9,6 +9,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from django.contrib import admin
+from compras.views import SolicitudCompraViewSet
 
 from django.urls import (
     include,
@@ -21,6 +22,7 @@ from django.urls import (
 # ==========================================================
 
 urlpatterns = [
+    path('api/caja-chica/saldo/', SolicitudCompraViewSet.as_view({'get': 'saldo'}), name='saldo-caja-chica'),
 
     # ======================================================
     # ADMINISTRACIÓN DJANGO

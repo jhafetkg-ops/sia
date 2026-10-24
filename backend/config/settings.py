@@ -23,6 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # R01: el servicio carga esta variable desde /opt/sia/.env.
 SIA_LIMITE_CAJA_CHICA = Decimal(os.environ.get('SIA_LIMITE_CAJA_CHICA', '1000'))
+SIA_FONDO_MENSUAL = Decimal(os.environ.get('SIA_FONDO_MENSUAL', '5000'))
 
 
 # ==========================================================
