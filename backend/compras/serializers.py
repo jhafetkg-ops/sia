@@ -2,6 +2,7 @@ from usuarios.archivos import firmar_urls
 from urllib.parse import urlsplit
 
 from rest_framework import serializers
+from django.conf import settings
 
 from .models import SolicitudCompra
 import re
@@ -244,6 +245,15 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
+        monto = attrs.get("monto_estimado", getattr(self.instance, "monto_estimado", None))
+        if monto is not None and monto > settings.SIA_LIMITE_CAJA_CHICA:
+            raise serializers.ValidationError({
+                "monto_estimado": (
+                    f"La compra no puede superar el límite de Caja Chica de "
+                    f"Bs {settings.SIA_LIMITE_CAJA_CHICA:.2f}."
+                )
+            })
+
         # BPMN: la solicitud viaja respaldada por Informe, Proforma y POA.
         # El "pedido" se conserva como documento opcional del expediente.
         if self.instance is None:

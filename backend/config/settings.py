@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+from decimal import Decimal
 from pathlib import Path
 
 
@@ -19,6 +20,9 @@ from pathlib import Path
 # ==========================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# R01: el servicio carga esta variable desde /opt/sia/.env.
+SIA_LIMITE_CAJA_CHICA = Decimal(os.environ.get('SIA_LIMITE_CAJA_CHICA', '1000'))
 
 
 # ==========================================================
