@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
 from django.conf import settings
+
 from django.db import transaction
 from django.core.files.base import ContentFile
 
@@ -137,12 +138,7 @@ def _categoria_por_defecto():
 #
 # ==========================================================
 
-SLA_POR_PRIORIDAD = {
-    "CRITICA": 4,
-    "ALTA": 8,
-    "MEDIA": 24,
-    "BAJA": 48,
-}
+SLA_POR_PRIORIDAD = settings.SIA_SLA_POR_PRIORIDAD
 
 
 # ==========================================================
@@ -1127,6 +1123,12 @@ class TicketViewSet(
         )
 
 
+        if ticket.categoria and (
+            ticket.categoria.codigo.strip().upper() in {"RED", "REDES", "SERVIDOR", "SERVIDORES"}
+            or ticket.categoria.nombre.strip().casefold() in {"red", "redes", "servidor", "servidores"}
+        ):
+            prioridad = "ALTA"
+
         if prioridad not in SLA_POR_PRIORIDAD:
 
             return Response(
@@ -1176,7 +1178,7 @@ class TicketViewSet(
 
 
         fecha_limite = (
-            ahora
+            ticket.creado_en
             +
             timedelta(
                 hours=horas_sla
