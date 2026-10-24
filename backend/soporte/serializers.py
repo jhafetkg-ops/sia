@@ -1096,6 +1096,13 @@ class TicketSerializer(
                 )
 
 
+        categoria = attrs.get("categoria", getattr(self.instance, "categoria", None))
+        if categoria and (
+            categoria.codigo.strip().upper() in {"RED", "REDES", "SERVIDOR", "SERVIDORES"}
+            or categoria.nombre.strip().casefold() in {"red", "redes", "servidor", "servidores"}
+        ):
+            attrs["prioridad"] = "ALTA"
+
         return attrs
 
 
@@ -1247,7 +1254,7 @@ class TicketSerializer(
                 #
                 # ==========================================
 
-                prioridad=None,
+                prioridad=validated_data.pop("prioridad", None),
 
                 sla_horas=None,
 
