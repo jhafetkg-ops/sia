@@ -3,6 +3,8 @@ from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
+from django.conf import settings
+from django.db import transaction
 from django.core.files.base import ContentFile
 
 from rest_framework import (
@@ -863,7 +865,7 @@ class TicketViewSet(
 
         if not validar_estado_ticket(
             ticket,
-            ["NUEVO"]
+            ["NUEVO", "ABIERTO"]
         ):
 
             return Response(
@@ -1213,7 +1215,7 @@ class TicketViewSet(
             )
 
 
-        if not ticket.prioridad:
+        if not ticket.validado_en or not ticket.clasificado_en or not ticket.prioridad:
 
             return Response(
                 {
@@ -1681,6 +1683,7 @@ class TicketViewSet(
         methods=["post"],
         url_path="solicitar-requerimiento-componente"
     )
+    @transaction.atomic
     def solicitar_requerimiento_componente(
         self,
         request,
@@ -1799,6 +1802,17 @@ class TicketViewSet(
             )
 
 
+        if costo_estimado is not None:
+            if not costo_estimado.is_finite() or costo_estimado < 0:
+                return Response({"detalle": "Ingrese un monto estimado válido y no negativo."}, status=400)
+            if costo_estimado > settings.SIA_LIMITE_CAJA_CHICA:
+                return Response({
+                    "detalle": f"La solicitud de compra supera el límite de Caja Chica de Bs {settings.SIA_LIMITE_CAJA_CHICA:.2f}."
+                }, status=400)
+
+        from compras.cotizaciones import validar_cotizaciones_tecnico, guardar_cotizaciones_tecnico
+        cotizaciones = validar_cotizaciones_tecnico(request, costo_estimado)
+
         ticket.requiere_compra = True
         ticket.cantidad_componente = cantidad
         ticket.componente_requerido = componente
@@ -1807,6 +1821,9 @@ class TicketViewSet(
         ticket.proveedor_cotizacion = proveedor
         ticket.costo_estimado = costo_estimado
         cotizacion_compra = request.FILES.get("cotizacion_archivo") or ticket.cotizacion_archivo
+        if cotizaciones:
+            cotizacion_compra = cotizaciones[0]['documento']
+            ticket.cotizacion_archivo = cotizacion_compra
         if not cotizacion_compra:
             return Response({"detalle": "Adjunte la cotización antes de enviar a jefatura."}, status=400)
         ticket.informe_compra.save(
@@ -1814,6 +1831,7 @@ class TicketViewSet(
             ContentFile(informe_requerimiento(ticket)),
             save=False,
         )
+        guardar_cotizaciones_tecnico(request, ticket, cotizaciones)
         ticket.estado_compra_componente = "SOLICITADA"
 
         # BPMN: el requerimiento viaja con su cotización adjunta.
@@ -2081,6 +2099,8 @@ class TicketViewSet(
         )
 
         ticket.estado_compra_componente = "VIABLE"
+        from compras.cotizaciones import trasladar_cotizaciones_tecnico
+        trasladar_cotizaciones_tecnico(ticket, solicitud)
         ticket.codigo_compra_vinculada = solicitud.codigo
 
         ticket.save(
