@@ -406,7 +406,7 @@
                     : ''
                 "
               >
-                ✓ Mínimo 8 caracteres
+                ✓ Mínimo 10 caracteres
               </span>
 
               <span
@@ -635,7 +635,7 @@ const mostrarConfirmacion = ref(false)
 ===================================== */
 
 const reglaLongitud = computed(() => {
-  return nuevaPassword.value.length >= 8
+  return nuevaPassword.value.length >= 10
 })
 
 
