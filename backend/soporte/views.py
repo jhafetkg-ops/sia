@@ -3,6 +3,9 @@ from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
+from django.conf import settings
+
+from django.db import transaction
 from django.core.files.base import ContentFile
 
 from rest_framework import (
@@ -135,12 +138,7 @@ def _categoria_por_defecto():
 #
 # ==========================================================
 
-SLA_POR_PRIORIDAD = {
-    "CRITICA": 4,
-    "ALTA": 8,
-    "MEDIA": 24,
-    "BAJA": 48,
-}
+SLA_POR_PRIORIDAD = settings.SIA_SLA_POR_PRIORIDAD
 
 
 # ==========================================================
@@ -632,7 +630,7 @@ class TicketViewSet(
     # MODIFICAR TICKET
     # ======================================================
 
-    def partial_update(
+    def update(
         self,
         request,
         *args,
@@ -643,6 +641,77 @@ class TicketViewSet(
 
         usuario = request.user
 
+        if "estado" in request.data:
+            destino = str(request.data.get("estado", "")).strip().upper().replace(" ", "_")
+            transiciones = {
+                "ABIERTO": {"EN_PROCESO"},
+                "EN_PROCESO": {"RESUELTO"},
+                "RESUELTO": {"CERRADO", "EN_PROCESO"},
+                "CERRADO": {"EN_PROCESO"},
+            }
+            if set(request.data) - {"estado", "solucion"}:
+                return Response({"detalle": "Cambie el estado por separado de los demás campos."}, status=400)
+            if not puede_operar_soporte(usuario) and not (
+                ticket.solicitante_id == usuario.id and (
+                    destino == "CERRADO"
+                    or (ticket.estado.codigo == "CERRADO" and destino == "EN_PROCESO")
+                )
+            ):
+                return Response({"detalle": "No tiene permiso para realizar esta transición."}, status=403)
+            with transaction.atomic():
+                ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
+                if destino not in transiciones.get(ticket.estado.codigo, set()):
+                    return Response({"estado": f"Transición no permitida: {ticket.estado.codigo} → {destino}."}, status=400)
+                if ticket.estado.codigo == "CERRADO":
+                    if ticket.solicitante_id != usuario.id:
+                        return Response({"detalle": "Solo el solicitante puede reabrir su ticket."}, status=403)
+                    ahora = timezone.now()
+                    if (
+                        ticket.cerrado_en is None
+                        or ticket.cerrado_en > ahora
+                        or ahora - ticket.cerrado_en > timedelta(days=settings.SIA_DIAS_REAPERTURA)
+                    ):
+                        return Response({
+                            "detalle": f"Solo se puede reabrir dentro de los {settings.SIA_DIAS_REAPERTURA} días siguientes al cierre."
+                        }, status=400)
+                solucion = str(request.data.get("solucion") or "").strip()
+                if destino == "EN_PROCESO" and ticket.tecnico_asignado_id:
+                    Usuario.objects.select_for_update().get(pk=ticket.tecnico_asignado_id)
+                    activos = Ticket.objects.filter(
+                        tecnico_asignado_id=ticket.tecnico_asignado_id,
+                        estado__codigo__in=["ABIERTO", "EN_PROCESO", "ASIGNADO", "EN_DIAGNOSTICO",
+                                           "EN_EJECUCION", "EN_VERIFICACION", "PENDIENTE_CONFORMIDAD"],
+                    ).exclude(pk=ticket.pk).count()
+                    if activos >= settings.SIA_MAX_TICKETS_TECNICO:
+                        return Response({"tecnico_id": f"El técnico ya tiene {settings.SIA_MAX_TICKETS_TECNICO} tickets activos."}, status=400)
+                if destino == "RESUELTO" and not solucion:
+                    return Response({"solucion": "Debe registrar un comentario de solución para resolver el ticket."}, status=400)
+                estado, _ = EstadoTicket.objects.get_or_create(
+                    codigo=destino,
+                    defaults={"nombre": destino.replace("_", " ").capitalize(), "activo": True,
+                              "es_terminal": destino == "CERRADO"},
+                )
+                if not estado.activo:
+                    return Response({"estado": "El estado de destino está inactivo."}, status=400)
+                ticket.estado = estado
+                if destino == "RESUELTO":
+                    ticket.solucion = solucion
+                    ticket.sla_cumplido = (
+                        timezone.now() <= ticket.sla_fecha_limite
+                        if ticket.sla_fecha_limite else None
+                    )
+                elif destino == "EN_PROCESO":
+                    ticket.sla_cumplido = None
+                    ticket.cerrado_en = None
+                elif destino == "CERRADO":
+                    ticket.cerrado_en = timezone.now()
+                ticket.save(update_fields=["estado", "solucion", "sla_cumplido", "cerrado_en", "actualizado_en"])
+                registrar_bitacora(request=request, accion="CAMBIAR_ESTADO_TICKET", modulo="Soporte Técnico",
+                                   detalle=f"{ticket.codigo}: {destino}.", nivel="INFO")
+            return Response(self.get_serializer(ticket).data)
+
+        if ticket.estado.codigo in {"RESUELTO", "CERRADO"}:
+            return Response({"detalle": "No se puede editar un ticket resuelto o cerrado."}, status=400)
 
         # --------------------------------------------------
         # SOLICITANTE
@@ -659,6 +728,7 @@ class TicketViewSet(
                 not in [
                     "BORRADOR",
                     "NUEVO",
+                    "ABIERTO",
                 ]
             ):
 
@@ -696,7 +766,7 @@ class TicketViewSet(
 
         respuesta = (
             super()
-            .partial_update(
+            .update(
                 request,
                 *args,
                 **kwargs
@@ -1053,6 +1123,12 @@ class TicketViewSet(
         )
 
 
+        if ticket.categoria and (
+            ticket.categoria.codigo.strip().upper() in {"RED", "REDES", "SERVIDOR", "SERVIDORES"}
+            or ticket.categoria.nombre.strip().casefold() in {"red", "redes", "servidor", "servidores"}
+        ):
+            prioridad = "ALTA"
+
         if prioridad not in SLA_POR_PRIORIDAD:
 
             return Response(
@@ -1102,7 +1178,7 @@ class TicketViewSet(
 
 
         fecha_limite = (
-            ahora
+            ticket.creado_en
             +
             timedelta(
                 hours=horas_sla
@@ -1177,6 +1253,7 @@ class TicketViewSet(
         methods=["post"],
         url_path="designar-revision"
     )
+    @transaction.atomic
     def designar_revision(
         self,
         request,
@@ -1196,16 +1273,18 @@ class TicketViewSet(
         ticket = self.get_object()
 
 
+        ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
+
         if not validar_estado_ticket(
             ticket,
-            ["EN_ANALISIS"]
+            ["EN_ANALISIS", "ABIERTO", "EN_PROCESO"]
         ):
 
             return Response(
                 {
                     "detalle": (
                         "El ticket debe encontrarse "
-                        "EN_ANALISIS."
+                        "EN_ANALISIS, ABIERTO o EN_PROCESO."
                     )
                 },
                 status=
@@ -1248,12 +1327,12 @@ class TicketViewSet(
 
         try:
 
-            tecnico = Usuario.objects.get(
+            tecnico = Usuario.objects.select_for_update().get(
                 pk=tecnico_id,
                 is_active=True
             )
 
-        except Usuario.DoesNotExist:
+        except (Usuario.DoesNotExist, ValueError, TypeError):
 
             return Response(
                 {
@@ -1296,9 +1375,22 @@ class TicketViewSet(
             )
 
 
-        estado_asignado = obtener_estado(
-            "ASIGNADO"
-        )
+        activos = Ticket.objects.filter(
+            tecnico_asignado=tecnico,
+            estado__codigo__in=["ABIERTO", "EN_PROCESO", "ASIGNADO", "EN_DIAGNOSTICO",
+                               "EN_EJECUCION", "EN_VERIFICACION", "PENDIENTE_CONFORMIDAD"],
+        ).exclude(pk=ticket.pk).count()
+        if activos >= settings.SIA_MAX_TICKETS_TECNICO:
+            return Response({
+                "tecnico_id": f"El técnico ya tiene {settings.SIA_MAX_TICKETS_TECNICO} tickets activos."
+            }, status=400)
+
+        if ticket.estado.codigo in {"ABIERTO", "EN_PROCESO"}:
+            estado_asignado, _ = EstadoTicket.objects.get_or_create(
+                codigo="EN_PROCESO", defaults={"nombre": "En proceso", "activo": True},
+            )
+        else:
+            estado_asignado = obtener_estado("ASIGNADO")
 
 
         if not estado_asignado:

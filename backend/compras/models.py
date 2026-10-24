@@ -320,7 +320,7 @@ class SolicitudCompra(models.Model):
         # Regla EMI utilizada para Caja Chica.
         if self.monto_estimado is not None:
 
-            if self.monto_estimado <= 1500:
+            if self.monto_estimado <= 1000:
                 self.via_adquisicion = "CAJA_CHICA"
 
             else:

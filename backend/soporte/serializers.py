@@ -1,5 +1,7 @@
 from usuarios.archivos import firmar_urls
 from django.utils import timezone
+from django.conf import settings
+from datetime import timedelta
 
 from rest_framework import serializers
 
@@ -770,7 +772,7 @@ class TicketSerializer(
         # TICKET CERRADO
         # --------------------------------------------------
 
-        if obj.cerrado_en:
+        if obj.cerrado_en or obj.estado.codigo in {"RESUELTO", "CERRADO"} or obj.estado.es_terminal:
 
             if obj.sla_cumplido is True:
 
@@ -780,6 +782,11 @@ class TicketSerializer(
             if obj.sla_cumplido is False:
 
                 return "INCUMPLIDO"
+
+            if obj.cerrado_en:
+                return "CUMPLIDO" if obj.cerrado_en <= obj.sla_fecha_limite else "INCUMPLIDO"
+
+            return "FINALIZADO"
 
 
         # --------------------------------------------------
@@ -798,12 +805,12 @@ class TicketSerializer(
         # CALCULAR RIESGO
         # --------------------------------------------------
 
-        if obj.clasificado_en:
+        if obj.creado_en:
 
             duracion_total = (
                 obj.sla_fecha_limite
                 -
-                obj.clasificado_en
+                obj.creado_en
             )
 
             tiempo_restante = (
@@ -849,7 +856,7 @@ class TicketSerializer(
             return None
 
 
-        if obj.cerrado_en:
+        if obj.cerrado_en or obj.estado.codigo in {"RESUELTO", "CERRADO"} or obj.estado.es_terminal:
 
             return 0
 
@@ -1096,6 +1103,13 @@ class TicketSerializer(
                 )
 
 
+        categoria = attrs.get("categoria", getattr(self.instance, "categoria", None))
+        if categoria and (
+            categoria.codigo.strip().upper() in {"RED", "REDES", "SERVIDOR", "SERVIDORES"}
+            or categoria.nombre.strip().casefold() in {"red", "redes", "servidor", "servidores"}
+        ):
+            attrs["prioridad"] = "ALTA"
+
         return attrs
 
 
@@ -1140,10 +1154,10 @@ class TicketSerializer(
 
             estado_nuevo = (
                 EstadoTicket.objects
-                .get(
-                    codigo="NUEVO",
-                    activo=True
-                )
+                .get_or_create(
+                    codigo="ABIERTO",
+                    defaults={"nombre": "Abierto", "activo": True, "es_inicial": True}
+                )[0]
             )
 
 
@@ -1152,7 +1166,7 @@ class TicketSerializer(
             raise serializers.ValidationError(
                 {
                     "estado": (
-                        "No existe el estado NUEVO "
+                        "No existe el estado ABIERTO "
                         "activo en el sistema."
                     )
                 }
@@ -1228,6 +1242,15 @@ class TicketSerializer(
         # CREAR
         # ==========================================================
 
+        prioridad = validated_data.pop("prioridad", None) or str(
+            self.initial_data.get("prioridad") or "MEDIA"
+        ).strip().upper()
+        if prioridad not in settings.SIA_SLA_POR_PRIORIDAD:
+            raise serializers.ValidationError({
+                "prioridad": "Seleccione BAJA, MEDIA, ALTA o CRITICA."
+            })
+        horas_sla = settings.SIA_SLA_POR_PRIORIDAD[prioridad]
+
         ticket = (
             Ticket.objects.create(
 
@@ -1240,18 +1263,17 @@ class TicketSerializer(
                 # ==========================================
                 # EL SOLICITANTE NO DEFINE:
                 #
-                # - prioridad
-                # - SLA
+                # El SLA se calcula automáticamente según la prioridad.
                 # - responsable
                 # - estado
                 #
                 # ==========================================
 
-                prioridad=None,
+                prioridad=prioridad,
 
-                sla_horas=None,
+                sla_horas=horas_sla,
 
-                sla_fecha_limite=None,
+                sla_fecha_limite=timezone.now() + timedelta(hours=horas_sla),
 
                 sla_cumplido=None,
 
@@ -1259,5 +1281,9 @@ class TicketSerializer(
             )
         )
 
+
+        # Usar exactamente la fecha persistida por auto_now_add.
+        ticket.sla_fecha_limite = ticket.creado_en + timedelta(hours=horas_sla)
+        ticket.save(update_fields=["sla_fecha_limite"])
 
         return ticket

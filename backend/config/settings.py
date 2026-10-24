@@ -22,8 +22,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # R01: el servicio carga esta variable desde /opt/sia/.env.
+
 SIA_LIMITE_CAJA_CHICA = Decimal(os.environ.get('SIA_LIMITE_CAJA_CHICA', '1000'))
 SIA_FONDO_MENSUAL = Decimal(os.environ.get('SIA_FONDO_MENSUAL', '5000'))
+SIA_DIAS_REAPERTURA = int(os.environ.get('SIA_DIAS_REAPERTURA', '7'))
+SIA_MAX_TICKETS_TECNICO = int(os.environ.get('SIA_MAX_TICKETS_TECNICO', '5'))
 
 
 # ==========================================================
@@ -267,6 +270,9 @@ SESION_TOKEN_HORAS_VALIDEZ = 12
 LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'America/La_Paz'
+
+# R04: horas de atención desde la creación del ticket.
+SIA_SLA_POR_PRIORIDAD = {'CRITICA': 4, 'ALTA': 4, 'MEDIA': 24, 'BAJA': 72}
 
 USE_I18N = True
 

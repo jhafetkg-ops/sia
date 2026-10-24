@@ -786,6 +786,8 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        from django.contrib.auth.models import Group
+        Group.objects.get_or_create(name="Jefe administrativo")
 
         self.stdout.write("")
 

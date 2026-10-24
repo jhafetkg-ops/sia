@@ -304,7 +304,10 @@ class SolicitudCompraViewSet(
         # recibe directamente la solicitud de compra (no existe una
         # jefatura que se la asigne previamente), así que ve la misma
         # bandeja que el resto de los actores del proceso.
-        if tiene_permiso(usuario, "VER_COMPRAS"):
+        if tiene_permiso(usuario, "VER_COMPRAS") or (
+            self.action == "visto_bueno_director"
+            and usuario.groups.filter(name="Jefe administrativo").exists()
+        ):
             return queryset
 
 
@@ -571,7 +574,14 @@ class SolicitudCompraViewSet(
 
     @transaction.atomic
     def _transicion(self, request, solicitud, permiso, origen, destino, accion, detalle):
-        if not tiene_permiso(request.user, permiso):
+        es_jefe_aprobador = False
+        if destino == "APROBADO_PARA_DESEMBOLSO":
+            if solicitud.solicitante_id == request.user.id:
+                return Response({"detalle": "No puede aprobar su propia compra."}, status=403)
+            es_jefe_aprobador = request.user.groups.filter(name="Jefe administrativo").exists()
+            if solicitud.monto_estimado is not None and solicitud.monto_estimado > Decimal("300") and not es_jefe_aprobador:
+                return Response({"detalle": "Las compras mayores a Bs 300 solo pueden ser aprobadas por el grupo Jefe administrativo."}, status=403)
+        if not tiene_permiso(request.user, permiso) and not es_jefe_aprobador:
             return respuesta_sin_permiso(permiso)
         if destino == "APROBADO_PARA_DESEMBOLSO":
             # Un bloqueo común protege el fondo incluso para compras distintas.
@@ -583,17 +593,59 @@ class SolicitudCompraViewSet(
             return Response({"detalle": "El expediente está cerrado y es inmutable."}, status=status.HTTP_409_CONFLICT)
         if solicitud.estado not in origen:
             return Response({"detalle": f"Transición no permitida desde {solicitud.estado}."}, status=status.HTTP_409_CONFLICT)
-        if destino == "APROBADO_PARA_DESEMBOLSO" and solicitud.via_adquisicion == "CAJA_CHICA":
+        if (
+            destino in {
+                "EVALUADO_PENDIENTE_CERTIFICACION",
+                "VERIFICADO_PENDIENTE_AUTORIZACION",
+                "APROBADO_PARA_DESEMBOLSO",
+            }
+            and solicitud.monto_estimado is not None
+            and solicitud.monto_estimado > Decimal("500")
+        ):
+            proveedores = {
+                " ".join(proveedor.split()).casefold()
+                for proveedor in solicitud.cotizaciones
+                .exclude(documento="").exclude(documento__isnull=True)
+                .values_list("proveedor", flat=True)
+                if proveedor and proveedor.strip()
+            }
+            if len(proveedores) < 3:
+                return Response({
+                    "detalle": (
+                        "Para compras mayores a Bs 500 debe adjuntar al menos "
+                        "3 cotizaciones de proveedores distintos antes de avanzar "
+                        "a aprobación."
+                    )
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        if (
+            destino == "APROBADO_PARA_DESEMBOLSO"
+            and solicitud.via_adquisicion == "CAJA_CHICA"
+        ):
             from .tesoreria import saldo_mensual
+
             if solicitud.monto_estimado is None or solicitud.monto_estimado <= 0:
-                return Response({"monto_estimado": "Registre un monto positivo antes de aprobar."}, status=400)
-            saldo = saldo_mensual()['saldo']
+                return Response({
+                    "monto_estimado": "Registre un monto positivo antes de aprobar."
+                }, status=400)
+
+            saldo = saldo_mensual()["saldo"]
             if solicitud.monto_estimado > saldo:
-                return Response({"detalle": f"Saldo mensual insuficiente. Disponible: Bs {saldo:.2f}."}, status=400)
+                return Response({
+                    "detalle": (
+                        f"Saldo mensual insuficiente. Disponible: Bs {saldo:.2f}."
+                    )
+                }, status=400)
+
             registrar_bitacora(
-                request=request, accion='RESERVAR_FONDO_CAJA_CHICA', modulo='Compras',
-                detalle=json.dumps({'codigo': solicitud.codigo, 'monto': str(solicitud.monto_estimado)}),
-                nivel='INFO',
+                request=request,
+                accion="RESERVAR_FONDO_CAJA_CHICA",
+                modulo="Compras",
+                detalle=json.dumps({
+                    "codigo": solicitud.codigo,
+                    "monto": str(solicitud.monto_estimado),
+                }),
+                nivel="INFO",
             )
         solicitud.estado = destino
         solicitud.save()
